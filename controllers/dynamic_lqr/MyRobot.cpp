@@ -1,6 +1,7 @@
 
 
 #include "Robot.h"
+#define NeedAngle 90
 
 MyRobot::MyRobot() : balance_angle(-0.0064)
 {
@@ -185,35 +186,19 @@ void MyRobot::status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
     leg_R->TWheel_set += out_turn;
 }
 
-void MyRobot::myJump(float t_clk, LegClass &leg_L, LegClass &leg_R) {
+void MyRobot::Jump_Init(float t_clk, LegClass &leg_L, LegClass &leg_R) {
     
-    DataStructure initialLegPosition_L;// get inital position
-    DataStructure initialLegPosition_R;
-    float initialBalanceAngle;
+   
     initialLegPosition_L.now = leg_L.L0.now;
     initialLegPosition_R.now = leg_R.L0.now;
     initialBalanceAngle = balance_angle;
 
 
     
-    // Raise the legs to initiate the jump
-    leg_L.L0.set = 10;  
-    leg_R.L0.set = 10;  
+   
 
-    // Increase thrust for upward acceleration
-    leg_L.TL_set = 30; 
-    leg_L.TR_set = 30;  
-    leg_R.TL_set = 30;  
-    leg_R.TR_set = 30;  
-
-    // Disable balance control while jumping
-    balance_angle = 0.0;
-
-    // Time the jump
-    int jump_duration = 1000;  // Jump duration in milliseconds
-    int jump_start_time = getTime();
-
-    while (getTime() - jump_start_time < jump_duration) {
+    
+    if (getTime() - jump_start_time < jump_duration) {
         // Update the jump height profile based on the elapsed time
         float t_elapsed = getTime() - jump_start_time;
         float jump_height = 20; // Modify this value as needed for the desired jump height profile
@@ -228,7 +213,7 @@ void MyRobot::myJump(float t_clk, LegClass &leg_L, LegClass &leg_R) {
 
     // Reset leg positions and thrust
     leg_L.L0.set = initialLegPosition_L.now;
-    leg_R.L0.set= initialLegPosition_R.now;
+    leg_R.L0.set = initialLegPosition_R.now;
     leg_L.TL_set = 0.0;
     leg_L.TR_set = 0.0;
     leg_R.TL_set = 0.0;
@@ -238,6 +223,19 @@ void MyRobot::myJump(float t_clk, LegClass &leg_L, LegClass &leg_R) {
     balance_angle= initialBalanceAngle;
 }
 
+
+
+void MyRobot::Jump_shrink() {
+    leg_L.L0.set = 0.6;
+    leg_R.L0.set = 0.6;
+    leg_L.TL_set = 0;
+    leg_L.TR_set = 0;
+    leg_R.TL_set = 0;
+    leg_R.TR_set = 0;
+   
+}
+    
+    
 
 
 
@@ -321,8 +319,7 @@ void MyRobot::run()
             sampling_time = time;
             break;
         case 'J':  // 'J' key to trigger the jump
-            myJump(t_clk, leg_L, leg_R);
-            Wait(5000);
+            state = JUMP_INIT;
             break;
         case ' ':
             if (last_key != key)
@@ -333,6 +330,9 @@ void MyRobot::run()
         last_key = key;
         key = mkeyboard->getKey();
     }
+
+    jumpManager();
+
     leg_L.L0.set = Limit(leg_L.L0.set, 0.35, 0.2);
     leg_R.L0.set = Limit(leg_R.L0.set, 0.35, 0.2);
     /*测试用的，追踪一个持续4s的速度期望*/
@@ -389,7 +389,62 @@ void MyRobot::run()
  * @return {*}
  */
 
+void MyRobot::jumpManager(void)
+{
+    DataStructure initialLegPosition_L;// get inital position
+    DataStructure initialLegPosition_R;
+    float initialBalanceAngle;
+    switch (state)
+    {
+        case JUMP_INIT:
+        {
+            Jump_Init(t_clk, leg_L, leg_R);
+             // Raise the legs to initiate the jump
+            leg_L.L0.set = 0.35;  //max h it can reach
+            leg_R.L0.set = 0.35;  
 
+            // Increase thrust for upward acceleration
+            leg_L.TL_set = 30; 
+            leg_L.TR_set = 30;  
+            leg_R.TL_set = 30;  
+            leg_R.TR_set = 30;  
+            // // Disable balance control while jumping
+            // balance_angle = 0.0;
+
+            // Time the jump
+            int starttime = gettime();
+            int duration = 1000;
+            state = JUMP_LAUNCH;
+            break;
+        }
+
+        // case JUMP_LAUNCH:
+        // {
+            
+        //     // unchange torque
+        //     if (gettime() - starttime > duration)
+        //     {
+        //         state = JUMP_SHRINK;
+        //     }
+    
+        //     if (balance_angle = NeedAngle)
+        //     {
+        //         state = JUMP_SHRINK;
+        //     }
+        //     break;
+        // }
+        // case JUMP_SHRINK:
+        // {
+        //     Jump_shrink();
+        //     break;
+        // }
+        // default:
+        // {
+        //     // should not reach here
+        //     break;
+        // }
+    }
+}
 
 float MyRobot::limitVelocity(float speed_set, float L0)
 {

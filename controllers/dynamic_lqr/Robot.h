@@ -77,7 +77,8 @@ public:
     void MyStep();
     void Wait(int ms);
     void run();
-    void myJump(float t_clk, LegClass &leg_L, LegClass &leg_R);
+    void Jump_Init(float t_clk, LegClass &leg_L, LegClass &leg_R);
+    void Jump_shrink();
     float limitVelocity(float speed_set, float L0);
     double getVelNow() { return velocity.now; };
     double getVelSet() { return velocity.set; };

@@ -1,6 +1,6 @@
 %闭链五杆的正解，根据电机的角度求足端末点的坐标
 %u1为l1从x轴顺时针转的角度，为负值；u4为l4从x轴逆时针转的角度
-function [x, y, u2, u3] = Zjie(u1, u4, pitch)%选择以l5/2处为零点进行建模
+function [x, y, u2, u3] = ForwardKinematics(u1, u4, pitch)%选择以l5/2处为零点进行建模
 global l1 l2 l3 l4 l5;
 xb = l1 * cos(u1) - l5/2;
 yb = l1 * sin(u1);

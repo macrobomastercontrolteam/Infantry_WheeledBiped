@@ -14,7 +14,7 @@ int main(int argc, char **argv)
     outfile.close();
     remove("data2.dat");
     // MyRobot::get()->Wait(10);
-    static int i = 0;
+    // static int i = 0;
     while (True)
     {
         wheel_legged.MyStep();

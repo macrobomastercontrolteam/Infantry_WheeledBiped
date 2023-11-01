@@ -53,8 +53,8 @@ public:
     PID_Controller supportF_pid;
 
     LegClass();
-    void Zjie(const float angle1, const float angle4, const float pitch);
-    void Njie(const float xc, const float yc);
+    void ForwardKinematics(const float angle1, const float angle4, const float pitch);
+    void InvKinematics(const float xc, const float yc);
     Matrix<float, 2, 1> VMC(const float F, const float Tp);
 };
 

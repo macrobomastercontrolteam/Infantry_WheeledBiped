@@ -16,13 +16,16 @@ LegClass::LegClass()
     l4 = 0.180;
     l5 = 0.120;
     F_set = -12 / 2 * 9.81;
-    dis.now = dis.last = dis.dot = dis.last = 0;
+    dis.now = 0;
+    dis.last = 0; 
+    dis.dot = 0;
+    dis.last = 0;
 
     xc = 0, yc = 0.28817;
     angle0.now = 0;
     angle1 = PI / 3 * 2;
     angle4 = PI / 3;
-    Zjie(angle1, angle4, 0);
+    ForwardKinematics(angle1, angle4, 0);
     L0.set = 0.260; // 初值
     L0.last = 0.260;
     K << -55.6021, -13.3377, -9.7707, -11.4781, 15.0562, 0.7386,
@@ -38,7 +41,7 @@ LegClass::LegClass()
  * @param {float} yc
  * @return {*}
  */
-void LegClass::Njie(const float xc, const float yc)
+void LegClass::InvKinematics(const float xc, const float yc)
 {
     this->xc = xc;
     this->yc = yc;
@@ -78,7 +81,7 @@ void LegClass::Njie(const float xc, const float yc)
  * @param {float} pitch %rad
  * @return {*}
  */
-void LegClass::Zjie(const float angle1, const float angle4, const float pitch)
+void LegClass::ForwardKinematics(const float angle1, const float angle4, const float pitch)
 {
     this->angle1 = angle1;
     this->angle4 = angle4;

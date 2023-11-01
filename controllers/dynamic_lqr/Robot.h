@@ -36,6 +36,8 @@ private:
     float time;          // 秒
     float sampling_time; // 开始检测的时间,秒
     float yaw_get;
+    int starttime;
+    float balance_angle;
 
     Camera *camera;
     Gyro *gyro;
@@ -50,6 +52,18 @@ private:
     PID_Controller roll_pid;
     Matrix<float, 12, 4> K_coeff;
 
+    DataStructure initialLegPosition_L; // get inital position
+    DataStructure initialLegPosition_R;
+    float initialBalanceAngle;
+    enum eJumpState
+    {
+        JUMP_INIT = 0,
+        JUMP_CHARGE = 1,
+        JUMP_LAUNCH = 2,
+        JUMP_SHRINK = 3,
+        JUMP_IDLE = 4,
+    } jumpState;
+
     float acc_up_max, acc_down_max, acc_now;
 
     u8 stop_flag;
@@ -63,7 +77,6 @@ public:
     LegClass leg_L, leg_R, leg_simplified;
     DataStructure velocity, yaw, pitch, roll;
 
-    float balance_angle;
     static MyRobot *get()
     {
         static MyRobot robot;
@@ -77,8 +90,8 @@ public:
     void MyStep();
     void Wait(int ms);
     void run();
-    void Jump_Init(float t_clk, LegClass &leg_L, LegClass &leg_R);
-    void Jump_shrink();
+    void Jump_Init(LegClass &leg_L, LegClass &leg_R);
+    void jumpManager();
     float limitVelocity(float speed_set, float L0);
     double getVelNow() { return velocity.now; };
     double getVelSet() { return velocity.set; };

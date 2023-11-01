@@ -28,7 +28,7 @@ pitch = deg2rad(0);
 %根据已知信息求解足端点相对腿部坐标系的坐标
 K_real = [ -44.0953   -6.8365   -9.4448  -13.1763    3.2857    0.5899
    21.8030    3.9547    6.5714    8.7988   18.8896    2.3311]
-[xc, yc, theta2, theta3] = Zjie(theta1, theta4, pitch)
+[xc, yc, theta2, theta3] = ForwardKinematics(theta1, theta4, pitch)
 l0 = sqrt(xc ^ 2 + yc ^ 2)
 theta0 = atan2(xc, yc)
 K = zeros(2, 6);

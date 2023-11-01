@@ -3,7 +3,7 @@
 #include "Robot.h"
 #define NeedAngle 90
 
-MyRobot::MyRobot() : balance_angle(-0.0064)
+MyRobot::MyRobot() : balance_angle{-0.0064}, jumpState{JUMP_IDLE}
 {
     time_step = getBasicTimeStep();
     mkeyboard = getKeyboard(), mkeyboard->enable(time_step);
@@ -112,19 +112,19 @@ void MyRobot::status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
     // 角度更新，统一从右视图看吧
     leg_L->angle1 = 2.0 / 3.0 * PI - encoder_FL->getValue();
     leg_L->angle4 = 1.0 / 3.0 * PI + encoder_BL->getValue();
-    leg_L->Zjie(leg_L->angle1, leg_L->angle4, pitch.now);
+    leg_L->ForwardKinematics(leg_L->angle1, leg_L->angle4, pitch.now);
     leg_L->angle0.dot = (leg_L->angle0.now - leg_L->angle0.last) / dt;
 
     leg_R->angle1 = 2.0 / 3.0 * PI - encoder_FR->getValue();
     leg_R->angle4 = 1.0 / 3.0 * PI + encoder_BR->getValue();
-    leg_R->Zjie(leg_R->angle1, leg_R->angle4, pitch.now);
+    leg_R->ForwardKinematics(leg_R->angle1, leg_R->angle4, pitch.now);
     leg_R->angle0.dot = (leg_R->angle0.now - leg_R->angle0.last) / dt;
     // 计算K矩阵数据，根据L0.now拟合得到
     static Matrix<float, 2, 1> u;
     static Matrix<float, 2, 1> Torque_L, Torque_R;
     leg_sim->angle1 = (leg_L->angle1 + leg_R->angle1) / 2;
     leg_sim->angle4 = (leg_L->angle4 + leg_R->angle4) / 2;
-    leg_sim->Zjie(leg_sim->angle1, leg_sim->angle4, pitch.now);
+    leg_sim->ForwardKinematics(leg_sim->angle1, leg_sim->angle4, pitch.now);
     leg_sim->angle0.dot = (leg_sim->angle0.now - leg_sim->angle0.last) / dt;
     // 限幅
     v_set = limitVelocity(v_set, leg_sim->L0.now);
@@ -170,8 +170,11 @@ void MyRobot::status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
     leg_L->F_set -= out_roll;
     leg_L->Tp_set -= out_spilt; // 这里的正负号没研究过，完全是根据仿真工程上得来的（其实这样也更快）
     Torque_L = leg_L->VMC(leg_L->F_set, leg_L->Tp_set);
+    // if ((jumpState != JUMP_LAUNCH))
+    // {
     leg_L->TL_set = -Torque_L(0, 0);
     leg_L->TR_set = Torque_L(1, 0);
+    // }
     leg_L->TWheel_set -= out_turn;
     // 右腿VMC解算
     leg_R->L0.dot = (leg_R->L0.now - leg_R->L0.last) / dt;
@@ -181,70 +184,46 @@ void MyRobot::status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
     leg_R->F_set += out_roll;
     leg_R->Tp_set += out_spilt;
     Torque_R = leg_R->VMC(leg_R->F_set, leg_R->Tp_set);
+    // if ((jumpState != JUMP_LAUNCH))
+    // {
     leg_R->TL_set = -Torque_R(0, 0);
     leg_R->TR_set = Torque_R(1, 0);
+    // }
     leg_R->TWheel_set += out_turn;
 }
 
-void MyRobot::Jump_Init(float t_clk, LegClass &leg_L, LegClass &leg_R) {
-    
-   
+void MyRobot::Jump_Init(LegClass &leg_L, LegClass &leg_R)
+{
     initialLegPosition_L.now = leg_L.L0.now;
     initialLegPosition_R.now = leg_R.L0.now;
     initialBalanceAngle = balance_angle;
 
+    // if (getTime() - jump_start_time < jump_duration) {
+    //     // Update the jump height profile based on the elapsed time
+    //     float t_elapsed = getTime() - jump_start_time;
+    //     float jump_height = 20; // Modify this value as needed for the desired jump height profile
+    //     leg_L.L0.set = jump_height * t_elapsed / jump_duration;
+    //     leg_R.L0.set = jump_height * t_elapsed / jump_duration;
+    //     MyStep();  // Advance the simulation by one step
 
-    
-   
+    // // Reset leg positions and thrust
+    // leg_L.L0.set = initialLegPosition_L.now;
+    // leg_R.L0.set = initialLegPosition_R.now;
+    // leg_L.TL_set = 0.0;
+    // leg_L.TR_set = 0.0;
+    // leg_R.TL_set = 0.0;
+    // leg_R.TR_set = 0.0;
 
-    
-    if (getTime() - jump_start_time < jump_duration) {
-        // Update the jump height profile based on the elapsed time
-        float t_elapsed = getTime() - jump_start_time;
-        float jump_height = 20; // Modify this value as needed for the desired jump height profile
-        leg_L.L0.set = jump_height * t_elapsed / jump_duration;
-        leg_R.L0.set = jump_height * t_elapsed / jump_duration;
-        MyStep();  // Advance the simulation by one step
-    }
-    
-    
-
-
-
-    // Reset leg positions and thrust
-    leg_L.L0.set = initialLegPosition_L.now;
-    leg_R.L0.set = initialLegPosition_R.now;
-    leg_L.TL_set = 0.0;
-    leg_L.TR_set = 0.0;
-    leg_R.TL_set = 0.0;
-    leg_R.TR_set = 0.0;
-
-    // Re-enable balance control
-    balance_angle= initialBalanceAngle;
+    // // Re-enable balance control
+    // balance_angle= initialBalanceAngle;
 }
-
-
-
-void MyRobot::Jump_shrink() {
-    leg_L.L0.set = 0.6;
-    leg_R.L0.set = 0.6;
-    leg_L.TL_set = 0;
-    leg_L.TR_set = 0;
-    leg_R.TL_set = 0;
-    leg_R.TR_set = 0;
-   
-}
-    
-    
-
-
 
 void MyRobot::run()
 {
     time = getTime();
-    // Define t_clk as the current time (you may need to adjust this based on your specific requirements).
-    float t_clk = getTime();  // Get the current time, adjust this as needed.
-    
+    // Define   as the current time (you may need to adjust this based on your specific requirements).
+    // float t_clk = getTime(); // Get the current time, adjust this as needed.
+
     static int last_key;
 
     velocity.now = gps->getSpeed();
@@ -256,7 +235,7 @@ void MyRobot::run()
     float yaw_dot_last = yaw.dot;
     yaw.dot = gyro->getValues()[1];
     yaw.ddot = (yaw.dot - yaw_dot_last) / (time_step * 0.001);
-    float robot_x = gps->getValues()[0];
+    // float robot_x = gps->getValues()[0];
     pitch.now -= balance_angle; // 得到相对于平衡pitch的角度
 
     if (yaw_get - yaw.last > 1.5 * PI)
@@ -318,14 +297,13 @@ void MyRobot::run()
             sampling_flag = 1;
             sampling_time = time;
             break;
-        case 'J':  // 'J' key to trigger the jump
-            state = JUMP_INIT;
+        case 'J': // 'J' key to trigger the jump
+            jumpState = JUMP_INIT;
             break;
         case ' ':
             if (last_key != key)
                 stop_flag = True;
             break;
-        
         }
         last_key = key;
         key = mkeyboard->getKey();
@@ -333,8 +311,11 @@ void MyRobot::run()
 
     jumpManager();
 
-    leg_L.L0.set = Limit(leg_L.L0.set, 0.35, 0.2);
-    leg_R.L0.set = Limit(leg_R.L0.set, 0.35, 0.2);
+    if ((jumpState != JUMP_IDLE))
+    {
+        leg_L.L0.set = Limit(leg_L.L0.set, 0.35, 0.2);
+        leg_R.L0.set = Limit(leg_R.L0.set, 0.35, 0.2);
+    }
     /*测试用的，追踪一个持续4s的速度期望*/
     // if (sampling_flag == 1)
     // {
@@ -391,58 +372,71 @@ void MyRobot::run()
 
 void MyRobot::jumpManager(void)
 {
-    DataStructure initialLegPosition_L;// get inital position
-    DataStructure initialLegPosition_R;
-    float initialBalanceAngle;
-    switch (state)
+    switch (jumpState)
     {
-        case JUMP_INIT:
+    case JUMP_INIT:
+    {
+        Jump_Init(leg_L, leg_R);
+        // Raise the legs to initiate the jump
+        leg_L.L0.set = 0.2;
+        leg_R.L0.set = 0.2;
+
+        // Increase thrust for upward acceleration
+        // leg_L.TL_set = 10;
+        // leg_L.TR_set = 10;
+        // leg_R.TL_set = 10;
+        // leg_R.TR_set = 10;
+        // // Disable balance control while jumping
+        // balance_angle = 0.0;
+
+        // Time the jump
+        // starttime = getTime();
+        jumpState = JUMP_CHARGE;
+
+        break;
+    }
+    case JUMP_CHARGE:
+    {
+        if ((leg_L.L0.now <= 0.25) && (leg_R.L0.now <= 0.25))
         {
-            Jump_Init(t_clk, leg_L, leg_R);
-             // Raise the legs to initiate the jump
-            leg_L.L0.set = 0.35;  //max h it can reach
-            leg_R.L0.set = 0.35;  
-
-            // Increase thrust for upward acceleration
-            leg_L.TL_set = 30; 
-            leg_L.TR_set = 30;  
-            leg_R.TL_set = 30;  
-            leg_R.TR_set = 30;  
-            // // Disable balance control while jumping
-            // balance_angle = 0.0;
-
-            // Time the jump
-            int starttime = gettime();
-            int duration = 1000;
-            state = JUMP_LAUNCH;
-            break;
+            leg_L.L0.set = 0.35;
+            leg_R.L0.set = 0.35;
+            jumpState = JUMP_LAUNCH;
         }
-
-        // case JUMP_LAUNCH:
-        // {
-            
-        //     // unchange torque
-        //     if (gettime() - starttime > duration)
-        //     {
-        //         state = JUMP_SHRINK;
-        //     }
-    
-        //     if (balance_angle = NeedAngle)
-        //     {
-        //         state = JUMP_SHRINK;
-        //     }
-        //     break;
-        // }
-        // case JUMP_SHRINK:
-        // {
-        //     Jump_shrink();
-        //     break;
-        // }
-        // default:
-        // {
-        //     // should not reach here
-        //     break;
-        // }
+        break;
+    }
+    case JUMP_LAUNCH:
+    {
+        // int duration = 2;
+        //  unchange torque
+        // if ((leg_L.L0.now >= 0.35) || (leg_R.L0.now >= 0.35))
+        if ((leg_L.L0.now >= 0.35) && (leg_R.L0.now >= 0.35)) // ((leg_L.angle2 >= 1.3*0.8) || (leg_R.angle2 >= 1.3*0.8))
+        // if ((getTime() - starttime > duration) || ((leg_L.L0.now >= 0.35) || (leg_R.L0.now >= 0.35)))
+        {
+            leg_L.L0.set = 0.2;
+            leg_R.L0.set = 0.2;
+            // leg_L.TL_set = -15;
+            // leg_L.TR_set = -15;
+            // leg_R.TL_set = -15;
+            // leg_R.TR_set = -15;
+            jumpState = JUMP_SHRINK;
+        }
+        break;
+    }
+    case JUMP_SHRINK:
+    {
+        jumpState = JUMP_IDLE;
+        break;
+    }
+    case JUMP_IDLE:
+    {
+        break;
+    }
+    default:
+    {
+        // should not reach here
+        break;
+    }
     }
 }
 
@@ -451,4 +445,3 @@ float MyRobot::limitVelocity(float speed_set, float L0)
     float speed_max = -30 * L0 + 10.7;
     return (speed_set > speed_max) ? speed_max : speed_set;
 }
-

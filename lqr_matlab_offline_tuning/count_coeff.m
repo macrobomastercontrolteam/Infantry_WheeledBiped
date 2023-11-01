@@ -57,7 +57,7 @@ for i = 1 : 1 : num_data
     theta2 = double(simplify(sol.theta2));
     theta3 = double(simplify(sol.theta3));
     %五连杆正解得到足端点
-    [xc, yc, u2, u3] = Zjie(theta1, theta4, 0)
+    [xc, yc, u2, u3] = ForwardKinematics(theta1, theta4, 0)
     %简化为单杆的质心坐标和转动惯量
     [xp, yp, Ip] = Simplify_model(pitch, theta1, theta4, xa, ya, xb, yb, xc, yc, xd, yd, xe, ye);
     %再接下来是根据上面的进行LQR线性化

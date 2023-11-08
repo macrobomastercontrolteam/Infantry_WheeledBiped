@@ -15,3 +15,4 @@
 *.d
 \controllers\Dynamics_LQR_onVS\.vs
 \controllers\Dynamics_LQR_onVS\x64
+**/c_cpp_properties.json

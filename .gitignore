@@ -1,4 +1,3 @@
-#将被git忽略的文件后缀
 *.dat
 *.ipchasdfasdf
 *.VC
@@ -13,6 +12,6 @@
 *.log
 *.o
 *.d
-\controllers\Dynamics_LQR_onVS\.vs
-\controllers\Dynamics_LQR_onVS\x64
 **/c_cpp_properties.json
+**/Makefile
+*.exe

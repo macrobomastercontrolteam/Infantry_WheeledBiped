@@ -1,0 +1,263 @@
+\documentclass{article}
+
+\usepackage{outlines}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{pdflscape}
+\usepackage[letterpaper, total={6in, 8in}]{geometry}
+\usepackage{glossaries}
+
+\input{../Comments}
+\input{../Common}
+
+\makenoidxglossaries
+% https://tex.stackexchange.com/questions/427460/glossaries-showing-in-appendix-and-in-table-of-contents
+\renewcommand*{\glossarysection}[2][]{\section{#1}}
+\newglossaryentry{wbr}
+{
+    name=WBR,
+    description={Wheeled Bipedal Robot}
+}
+\newglossaryentry{har}
+{
+    name=HAR,
+    description={Hazard Analysis Report}
+}
+\newglossaryentry{imc}
+{
+    name=IMC,
+    description={Inter-Module Communication}
+}
+\newglossaryentry{ca}
+{
+    name=CA,
+    description={Critical Assumptions}
+}
+\newglossaryentry{emi}
+{
+    name=EMI,
+    description={Electro Magnetic Interference}
+}
+\newglossaryentry{imu}
+{
+    name=IMU,
+    description={Inertial Measurement Unit}
+}
+\newglossaryentry{lidar}
+{
+    name=LiDAR,
+    description={Light Detection and Ranging}
+}
+\newglossaryentry{crc}
+{
+    name=CRC,
+    description={Cyclic Redundancy Check}
+}
+
+\title{Hazard Analysis Report\\\progname}
+
+\author{\authname}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\newpage
+
+\begin{table}[hp]
+\caption{Revision History} \label{TblRevisionHistory}
+\begin{tabularx}{\textwidth}{lllX}
+\toprule
+\textbf{Date} & \textbf{Editor(s)} & \textbf{Rev} & \textbf{Description}\\
+\midrule
+2023-10-26 & Haoyu Lin, Lisa Ji & 0 & Created initial draft\\
+& Yuntian Wang, Zichun Yan &&\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\newpage
+\tableofcontents
+\listoffigures
+\listoftables
+\newpage
+
+\section{Introduction}
+\subsection{Background}
+This \glsdesc{har} (\gls{har}) has been prepared for the delivery robot project of Group 1. This project is to develop a fully-autonomous delivery robot based on the existing \glsdesc{wbr} (\gls{wbr}) robot provided by the MacRobomaster Club. We are in charge of developing the software component of the project, while the hardware design and supply is handled by the MacRobomaster Team. The project will be mentioned as \gls{wbr} in the following documents.
+\subsection{Purpose}
+This document describes the components of the system; identifies; assesses probability of potential hazardous behaviours that could cause functional failure or safety issues.
+\subsection{Scope}
+The scope of this \gls{har} is to include all hazards only related to the software component of the \gls{wbr} project, while the MacRobomaster Team is responsible for the hardware design and provision. 
+
+\section{Components}
+\subsection{Robot Posture and Movement Control}
+The robot is designed to move in various ways, including moving up ramps, bypassing or jumping over obstacles, moving across asymmetric terrains in altitude or friction behaviours. As the fundamental criterion of its movement control, it shall maintain balance of chassis; responsively follow the commanded trajectory; avoid obstacles dexterously. \\
+The smoothness and reliability of the movements stands as a pivotal criterion to uphold the safety of its locomotion.
+\subsection{Inter-Module Communication}
+Ensuring the uninterrupted and less-delayed transmission of signals in between all system modules is of paramount importance. It is necessary for our robot to promptly execute commands and respond to sensor-derived information regarding the environment. Minimizing the response time of the control system necessitates optimizing data exchange procedures to mitigate any potential issues or disruptions that may impede the system's seamless operation.
+\subsection{Environment Sensing}
+Our robot will need to know what kind of environment it is in order to know where it is and where to go. Since the environment is changing all the time, a high frequency and low delay system is required to keep the robot updated in real-time, so it supports the importance of the previous component, \gls{imc}.
+\subsection{Path Finding and Tracking}
+This robot needs to figure out how it can get to the delivery location while following the provided map and shall log its path in the mean time. \\
+Since our robot will be running on public areas, a great local and global obstacle avoidance will be necessary in our scenario. It will need to dodge human, animal, car, and any obstacle that originally did not show on the path finding algorithm for local obstacle avoidance. 
+\subsection{User Interface}
+This component shall provide a comprehensive communication interface between system and user. 
+\subsection{Delivery Security}
+This component will ensure only the authorized user will receive the package. 
+
+\section{Critical Assumptions}
+\glsdesc{ca} (\gls{ca}) are,
+\begin{outline}[enumerate]
+\1 All mechanical components provided by the MacRobomaster Team are reasonably robust and reliable, and can almost behave like rigid bodies in the control analysis.
+\1 All electronic components provided by the MacRobomaster Team from market are reasonably robust and reliable.
+    \2 All measurement instruments provides reasonably accurate results or results with appropriate uncertainty distributions.
+    \2 All actuators act responsively and accurately according to instruction by controller. Delays, repeatability, accuracy, etc. are reasonable. 
+    \2 Cameras, LiDAR, Developer Boards are good to use in outdoor environment. 
+\1 The overall robot assembly built by the MacRobomaster Team is reasonably robust and reliable.
+\1 Only people authorized by MacRobomaster Team is able to use our delivery robot. 
+\end{outline}
+
+\section{Hazard Analysis}
+\subsection{FMEA Worksheet}
+
+\begin{center}
+\setlength\LTleft{-1in}% 1in into the left margin
+\begin{longtable}{|p{2.5cm}|p{2.5cm}|p{3cm}|p{3cm}|p{1.25cm}|p{2.5cm}|p{0.75cm}|p{0.75cm}|}
+    \caption{FMEA Table} \label{FMEA_table} \\
+    
+    \hline
+    \textbf{Components} & \textbf{Failure Modes} & \textbf{Causes of Failure} & \textbf{Effects of Failure} & \textbf{Severity} & \textbf{Recommended Actions} & \textbf{SR} & \textbf{Ref} \\
+    \hline 
+    \endfirsthead
+    
+    \multicolumn{8}{c}
+    {{\bfseries \tablename\ \thetable{} -- continued from previous page}} \\
+    \hline
+    \textbf{Components} & \textbf{Failure Modes} & \textbf{Causes of Failure} & \textbf{Effects of Failure} & \textbf{Severity} & \textbf{Recommended Actions} & \textbf{SR} & \textbf{Ref} \\
+    \hline
+    \endhead
+    
+    \hline \multicolumn{8}{|r|}{{Continued on next page}} \\ \hline
+    \endfoot
+    
+    \hline \hline
+    \endlastfoot
+    
+    Robot Posture and Movement Control
+    
+    & Unable to follow the instructed path & a. Terrain complexity out of controllable range of the system & Robot cannot reach the target location & High & a. Bypass dangerous terrain & SR1 & H1-1 \\
+    && b. Battery and/or motor overheated after prolonged operation period &&& b. Let robot rest for some time before tackling the tough terrain && \\
+    && c. Controller Failure &&& c. Extensively validate control system in different scenarios && \\ \cline{2-8}
+    
+    & Unable to maintain safe posture & a. Terrain complexity out of controllable range of the system & a. Vulnerable to system disturbance & High & a. Bypass dangerous terrain & SR3 & H1-2 \\
+    && b. Controller Failure & b. Potential damage to the cargo && b. Extensively validate control system in different scenarios &&\\ \cline{2-8}
+    
+    & Unable to reach safe posture & a. System properties changed, e.g. center of mass changed by cargo load & a. Cargo is prone to fall out of robot & Low & a. Implement dynamic adaptive control & SR3 & H1-3 \\
+    && b. Controller Failure & b. Cargo is held at improper inclination && b. Extensively validate control system in different scenarios && \\ \cline{2-8}
+    
+    \hline
+    \glsdesc{imc}
+    
+    & Intermittent loss of \gls{imc} & a. \glsdesc{emi} (\gls{emi}) & a. System being blind of environmental change & Medium & a. Implement Emergency stop after prolonged offline status & SR2 & H2-1 \\
+    &&b. Low battery & b. System becomes open-loop or closed-loop with garbage data, thus divergent && b. Implement redundancy check, e.g. \gls{crc}, and ignore corrupted data && \\
+    &&c. Crowded network& c. etc. (Depends on particular type of \gls{imc}) &&&& \\
+    &&d. (Depends on particular type of \gls{imc})&&&&& \\ \cline{2-8}
+
+    & Corrupted \gls{imc} data & a. \gls{emi} & Same as H2-1 & Medium & Same as H2-1 & SR2 & H2-2 \\
+    && b. Overloaded serial network &&&&& \\ \cline{2-8}
+    
+    & Invalid module response & a. Invalid request message data field & Same as H2-1 & High & a. Extensively validate control system in different scenarios & SR2 & H2-3 \\
+    && b. Invalid order of request messages &&& b. Same as H2-1 && \\ \cline{2-8}
+
+    \hline
+    Environment Sensing
+    
+    & Unable to form surrounding view(point cloud) & Distance out of hardware specification or part broken& Unable to react according to environmental change & Strongly High & Emergency stop and send back error code to server for diagnostic. & SR1 & H3-1 \\ \cline{2-8}
+    
+    & Unable to perform object detection & Bad machine learning model or faulty information from camera or LiDAR & Unable to react according to environmental change and fail to dodge moving obstacle with higher priority & Strongly High & Emergency stop & SR1 & H3-2 \\ \cline{2-8}
+    
+    & Unable to localize itself & a. Image processing software failure & Unable to react according to environmental change & Strongly High & a. Sensor Fusion and emergency stop. & SR6 & H3-3 \\
+    && b. LiDAR/IMU offline &&& b. Use more than at least 3 sensors together for localization. && \\
+    && c. Dirty camera/liDAR &&& c. protection on Camera and LiDAR &&\\ \cline{2-8}
+
+    \hline
+    Path Finding and Tracking
+    
+    & Unable to find path & a. Software logic failure & Robot cannot reach target & HIGH & a. Stop right away and get back to original location & SR4 & H4-1 \\
+    && b. Unstable connection to server &&& b. Restrict area for robot can delivery to&& \\ \cline{2-8}
+
+    & Improper selection of path & a. Communication failure with sensor & a. Crash into obstacles & Strongly High & a. Change sensor mounting location on the robot & SR6 & H4-2 \\
+    && b. Algorithm failure & b. Higher battery consumption &&b.add more sensors&& \\
+    &&& c. Robot stop mid way.  &&&&\\
+    &&& d. Robot could try to go under obstacle that it couldn't pass.&&&&  \\\cline{2-8}
+    
+    & Path logging failure & Server down, connection issue, or Software bug & a. Lost track of robot on APP. & Medium & a. Store log locally & SR2 & H4-3 \\
+    &&b. Lost historical data.&&&&&\\
+    \cline{2-8}
+    
+    & Unresponsive path planning & a. Software logic failure & Robot could run on undesired route & Strongly High & a. Restart program for re-calibration & SR4 & H4-4 \\
+    && b. Insufficient Computational Power &&&b. use at least 3 sensors to fuse and onboard processing&& \\
+    &&&&&c. Use soft padding around robot to avoid damage&& \\ \cline{2-8}
+
+    \hline
+
+    User Interface & App crash & Network issues in client side & information lost  & High & store log information & SR2 & H5-1 \\ \cline{2-8}
+    & Password transmission failure & Poor Network Connection & package locked  & High & Have a special way to unlock the space(master key, disassemble package box) & SR2 & H5-2 \\ \cline{2-8}
+    & Unauthorized access & Insufficient encryption and possible security check bypass. & Package lost or data leaking. & Strongly High & Set for the restriction of logging in and give permission only to limited user accounts or 2FA. & SR5 SR7 & H5-3 \\ \cline{2-8}
+
+    \hline
+
+    Delivery Security & Package theft & Inadequate Security Measures and high-crime geographical Location & The package is stolen from its intended location. & High & Use hard material for package box and alarm system with siren. & SR6 & H6-1 \\ \cline{2-8}
+    & Robot theft & Inadequate Security Measures and high-crime geographical Location & The robot is stolen from its intended location. & High & Have GPS on the robot keep location updated & SR6 & H6-2 \\ \cline{2-8}
+    
+    \hline
+\end{longtable}
+\end{center}
+
+\newpage
+
+\section{Safety and Security Requirements}
+\subsection{Safety Requirements}
+\subsubsection{SR1}
+The device shall stop if there exists any unintended movements or loss of control.\\
+\textit{Rationale}: It should be able to set a detector for the device. As long as the movement exceeds the range, send an error and auto stop the device.\\
+\textit{Associated Hazards}: H1-1, H3-1, H3-2
+\subsubsection{SR2}
+The device shall try to reconnect and return an error message when the connection is unstable.\\
+\textit{Rationale}: The user should be notified if the connection is unstable or offline. Users should not have access to hardware.\\
+\textit{Associated Hazards}: H2-1, H2-2, H2-3, H4-3, H5-1, H5-2
+\subsubsection{SR3}
+The device shall rest or stop right away if the motor is overheated, and it should have sufficient battery to return to base.\\
+\textit{Rationale}: A temperature sensor and a CPU usage monitor should be set for the device. As long as the temperature or usage exceeds the range, send an error.\\
+\textit{Associated Hazards}: H1-2, H1-3
+\subsubsection{SR4}
+The device shall stop and recalculate path if the robot is on a wrong path or can not avoid obstacle.\\
+\textit{Rationale}: The robot shall stop right away if sensors have big disagreement on obstacle detection, then attempt to find a solution for the issue.\\
+\textit{Associated Hazards}: H4-1, H4-4
+\subsection{Security Requirements}
+\subsubsection{SR5}
+The device shall reject unauthorized login.\\
+\textit{Rationale}: The user should be notified with the issue, and may attempt to reset the credentials.\\
+\textit{Associated Hazards}: H5-3
+\subsubsection{SR6}
+The device shall continuously send out GPS location.\\
+\textit{Rationale}: In case of theft or loss, the user should be able to know the location of the robot.\\
+\textit{Associated Hazards}: H3-3, H4-2, H6-1, H6-2
+\subsubsection{SR7}
+User Interface shall encrypt all data.\\
+\textit{Rationale}: In case of data leaking, UI shall encrypt all the data and only allow authorized user to access.\\
+\textit{Associated Hazards}: H5-3
+
+\section{Roadmap}
+The effects delineated within the hazard analysis document will be subject to thorough consideration, with a strong commitment to taking decisive actions aimed at reducing and eliminating the hazards throughout the course The prioritization of these actions will be determined based on the severity of each hazard, ensuring that the most critical issues are addressed as a matter of utmost importance.
+
+
+\clearpage
+\appendix
+\printnoidxglossaries
+
+\end{document}

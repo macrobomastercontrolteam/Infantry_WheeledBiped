@@ -31,6 +31,7 @@ public:
     float compute(float set, float real, float angle_w);
     float compute(float set, float encoder);
     float compute(const float target, const float d_target, const float input, const float d_input, const float dt);
+    float compute(const float target, const float d_target, const float input, const float d_input, const float dt, const float gain);
 
     void clear();
     void update(float _p, float _i, float _d, float _max_out);

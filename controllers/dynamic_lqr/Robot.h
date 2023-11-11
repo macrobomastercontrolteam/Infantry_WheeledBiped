@@ -62,6 +62,7 @@ private:
         JUMP_LAUNCH = 2,
         JUMP_SHRINK = 3,
         JUMP_IDLE = 4,
+        JUMP_RESUME = 5,
     } jumpState;
 
     float acc_up_max, acc_down_max, acc_now;
@@ -90,7 +91,7 @@ public:
     void MyStep();
     void Wait(int ms);
     void run();
-    void Jump_Init(LegClass &leg_L, LegClass &leg_R);
+    //void Jump_Init(LegClass &leg_L, LegClass &leg_R);
     void jumpManager();
     float limitVelocity(float speed_set, float L0);
     double getVelNow() { return velocity.now; };

@@ -1,0 +1,28 @@
+%% ---
+%% title: Jump FSM
+%% ---
+stateDiagram-v2
+    [*]--> JUMP_IDLE
+    state "JUMP_INIT:\nLower c_CoM to get longer launch distance" as JUMP_INIT
+    state "JUMP_CHARGE:\nStretch legs with extreme but decaying\n high gain and clip at max torque" as JUMP_CHARGE
+    state "JUMP_IDLE:\nNo control over c_CoM" as JUMP_IDLE
+    state "JUMP_LAUNCH:\nlower c_CoM to its orginal height" as JUMP_LAUNCH
+	state "JUMP_SHRINK:\nwait until c_CoM approaches initial height" as JUMP_SHRINK
+	state PRE_JUMP_CHARGE <<choice>>
+	state min_CoM <<choice>>
+	state max_CoM <<choice>>
+	state init_CoM <<choice>>
+
+    JUMP_IDLE--> PRE_JUMP_CHARGE : m_JumpCommand==1
+    PRE_JUMP_CHARGE  --> JUMP_IDLE: if c_CoM> k_maxCoM
+    PRE_JUMP_CHARGE  --> JUMP_INIT: else
+	JUMP_INIT-->min_CoM
+	min_CoM-->JUMP_CHARGE:If c_CoM<=k_minCoM
+	min_CoM-->JUMP_IDLE:else if c_CoM>k_minCoM || m_t>k_Timeout
+    JUMP_CHARGE-->max_CoM
+	max_CoM -->JUMP_LAUNCH:If c_CoM>=k_maxCoM 
+	max_CoM-->JUMP_IDLE:else if c_CoM< k_maxCoM || m_t>k_Timeout
+    JUMP_LAUNCH--> JUMP_SHRINK
+    JUMP_SHRINK-->init_CoM 
+	init_CoM -->JUMP_SHRINK: else
+	init_CoM -->JUMP_IDLE: If c_CoM>=k_initCoM 

@@ -119,11 +119,6 @@ void MyRobot::status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
     leg_L->TWheel_now = L_Wheelmotor->getTorqueFeedback();
     leg_R->TWheel_now = L_Wheelmotor->getTorqueFeedback();
 
-    std::cout << "Left leg left feedback torque : " << leg_L->TL_now << std::endl;
-    std::cout << "Left leg right feedback torque : " << leg_L->TR_now << std::endl;
-    std::cout << "Right leg left feedback torque : " << leg_R->TL_now << std::endl;
-    std::cout << "Right leg right feedback torque : " << leg_R->TR_now << std::endl;
-
     // 角度更新，统一从右视图看吧
     leg_L->angle1 = 2.0 / 3.0 * PI - encoder_FL->getValue();
     leg_L->angle4 = 1.0 / 3.0 * PI + encoder_BL->getValue();
@@ -386,11 +381,6 @@ void MyRobot::run()
     leg_R.TL_set = Limit(leg_R.TL_set, 22.0, -22.0);
     leg_R.TR_set = Limit(leg_R.TR_set, 22.0, -22.0);
 
-    // std::cout << "Left-left motor torque: " << leg_L.TL_set << std::endl;
-    // std::cout << "Left-right motor torque: " << leg_L.TR_set << std::endl;
-    // std::cout << "Right-left motor torque: " << leg_R.TL_set << std::endl;
-    // std::cout << "Right-right motor torque: " << leg_R.TR_set << std::endl;
-
     BL_legmotor->setTorque(leg_L.TL_set);
     FL_legmotor->setTorque(leg_L.TR_set);
     BR_legmotor->setTorque(leg_R.TL_set);
@@ -398,8 +388,6 @@ void MyRobot::run()
 
     L_Wheelmotor->setTorque(leg_L.TWheel_set);
     R_Wheelmotor->setTorque(leg_R.TWheel_set);
-
-    // std::cout << "Left-left motor torque: " << leg_L.TL_set << std::endl;
 
     // ofstream outfile;
     // outfile.open("data2.dat", ios::trunc);

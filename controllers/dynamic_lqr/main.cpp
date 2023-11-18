@@ -41,6 +41,14 @@ int main(int argc, char **argv)
                     << wheel_legged.leg_R.angle0.now << " "
                     << wheel_legged.leg_L.L0.set << " "
                     << wheel_legged.leg_R.L0.set << " "
+                    << wheel_legged.leg_L.TL_now << " "
+                    << wheel_legged.leg_R.TL_now << " "
+                    << wheel_legged.leg_L.TR_now << " "
+                    << wheel_legged.leg_R.TR_now << " "
+                    << wheel_legged.leg_L.TL_set << " "
+                    << wheel_legged.leg_R.TL_set << " "
+                    << wheel_legged.leg_L.TR_set << " "
+                    << wheel_legged.leg_R.TR_set << " "
                     << endl;
             outfile.close();
         }

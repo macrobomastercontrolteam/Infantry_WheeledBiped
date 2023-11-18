@@ -1,6 +1,7 @@
-#VRML_SIM R2020a utf8
+#VRML_SIM R2020b utf8
 WorldInfo {
   basicTimeStep 5
+  coordinateSystem "NUE"
 }
 Viewpoint {
   orientation 0.49823658255324216 0.8668812678490873 0.016648581261634106 5.936943429266377
@@ -585,7 +586,7 @@ Robot {
     density -1
     mass 0.001
   }
-  controller "<extern>"
+  controller "dynamic_lqr"
 }
 DEF 斜坡 Solid {
   translation 2 0.025 -0.5

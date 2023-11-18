@@ -3,7 +3,7 @@
 #include "Robot.h"
 #define NeedAngle 90
 
-MyRobot::MyRobot() : balance_angle{-0.0064}, jumpState{JUMP_IDLE}
+MyRobot::MyRobot() : balance_angle{-0.0064}, jumpState{JUMP_IDLE}, isJumpInTheAir(false)
 {
     time_step = getBasicTimeStep();
     mkeyboard = getKeyboard(), mkeyboard->enable(time_step);
@@ -88,8 +88,17 @@ void MyRobot::status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
                             const DataStructure pitch, const DataStructure roll, const DataStructure yaw,
                             const float dt, float v_set)
 {
-    leg_L->F_set = -13.17 / 2 * 9.81;
-    leg_R->F_set = -13.17 / 2 * 9.81;
+    if (jumpState == JUMP_SHRINK)
+    {
+        // flying
+        leg_L->F_set = 0;
+        leg_R->F_set = 0;
+    }
+    else
+    {
+        leg_L->F_set = -13.17 / 2 * 9.81;
+        leg_R->F_set = -13.17 / 2 * 9.81;
+    }
     // 获取当前机器人状态信息
     leg_L->dis.now = encoder_wheelL->getValue() * 0.05;
     leg_R->dis.now = encoder_wheelR->getValue() * 0.05;
@@ -109,6 +118,12 @@ void MyRobot::status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
     leg_R->TR_now = FR_legmotor->getTorqueFeedback();
     leg_L->TWheel_now = L_Wheelmotor->getTorqueFeedback();
     leg_R->TWheel_now = L_Wheelmotor->getTorqueFeedback();
+
+    std::cout << "Left leg left feedback torque : " << leg_L->TL_now << std::endl;
+    std::cout << "Left leg right feedback torque : " << leg_L->TR_now << std::endl;
+    std::cout << "Right leg left feedback torque : " << leg_R->TL_now << std::endl;
+    std::cout << "Right leg right feedback torque : " << leg_R->TR_now << std::endl;
+
     // 角度更新，统一从右视图看吧
     leg_L->angle1 = 2.0 / 3.0 * PI - encoder_FL->getValue();
     leg_L->angle4 = 1.0 / 3.0 * PI + encoder_BL->getValue();
@@ -166,19 +181,22 @@ void MyRobot::status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
     float pid_gain = 1;
     if (jumpState == JUMP_LAUNCH)
     {
-        float max_gain = 1000;
-        pid_gain = ((max_gain-1)*max(leg_L->L0.set,leg_R->L0.set)+(0.17-0.35*max_gain))/(0.17-0.35);
+        float max_gain = 135;
+        // pid_gain = max_gain;
+        pid_gain = max_gain * (1 - exp(-10 * (0.35 - max(leg_L->L0.now, leg_R->L0.now)))) + 1;
         // std::cout << "pid gain: " << pid_gain << std::endl;
-    }
-    else if (jumpState == JUMP_SHRINK)
-    {
-        float max_gain = 1000;
-        pid_gain = ((1-max_gain)*max(leg_L->L0.set,leg_R->L0.set)+(0.17*max_gain-0.35))/(0.17-0.35);
     }
     // 左腿VMC解算
     leg_L->L0.dot = (leg_L->L0.now - leg_L->L0.last) / dt;
     leg_L->L0.last = leg_L->L0.now;
-    out_L = leg_L->supportF_pid.compute(leg_L->L0.set, 0, leg_L->L0.now, leg_L->L0.dot, dt, pid_gain);
+    if ((jumpState == JUMP_LAUNCH))// || (jumpState == JUMP_SHRINK))
+    {
+        out_L = leg_L->supportF_pid.burst_compute(leg_L->L0.set, 0, leg_L->L0.now, leg_L->L0.dot, dt, pid_gain);
+    }
+    else
+    {
+        out_L = leg_L->supportF_pid.compute(leg_L->L0.set, 0, leg_L->L0.now, leg_L->L0.dot, dt);
+    }
     leg_L->F_set -= out_L;
     leg_L->F_set -= out_roll;
     leg_L->Tp_set -= out_spilt; // 这里的正负号没研究过，完全是根据仿真工程上得来的（其实这样也更快）
@@ -189,7 +207,14 @@ void MyRobot::status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
     // 右腿VMC解算
     leg_R->L0.dot = (leg_R->L0.now - leg_R->L0.last) / dt;
     leg_R->L0.last = leg_R->L0.now;
-    out_R = leg_R->supportF_pid.compute(leg_R->L0.set, 0, leg_R->L0.now, leg_R->L0.dot, dt, pid_gain);
+    if ((jumpState == JUMP_LAUNCH))// || (jumpState == JUMP_SHRINK))
+    {
+        out_R = leg_R->supportF_pid.burst_compute(leg_R->L0.set, 0, leg_R->L0.now, leg_R->L0.dot, dt, pid_gain);
+    }
+    else
+    {
+        out_R = leg_R->supportF_pid.compute(leg_R->L0.set, 0, leg_R->L0.now, leg_R->L0.dot, dt);
+    }
     leg_R->F_set -= out_R;
     leg_R->F_set += out_roll;
     leg_R->Tp_set += out_spilt;
@@ -319,8 +344,8 @@ void MyRobot::run()
 
     // if (jumpState != JUMP_IDLE)
     // {
-    //     leg_L.L0.set = Limit(leg_L.L0.set, 0.35, 0.2);
-    //     leg_R.L0.set = Limit(leg_R.L0.set, 0.35, 0.2);
+    // leg_L.L0.set = Limit(leg_L.L0.set, 0.35, 0.2);
+    // leg_R.L0.set = Limit(leg_R.L0.set, 0.35, 0.2);
     // }
 
     /*测试用的，追踪一个持续4s的速度期望*/
@@ -361,6 +386,11 @@ void MyRobot::run()
     leg_R.TL_set = Limit(leg_R.TL_set, 22.0, -22.0);
     leg_R.TR_set = Limit(leg_R.TR_set, 22.0, -22.0);
 
+    // std::cout << "Left-left motor torque: " << leg_L.TL_set << std::endl;
+    // std::cout << "Left-right motor torque: " << leg_L.TR_set << std::endl;
+    // std::cout << "Right-left motor torque: " << leg_R.TL_set << std::endl;
+    // std::cout << "Right-right motor torque: " << leg_R.TR_set << std::endl;
+
     BL_legmotor->setTorque(leg_L.TL_set);
     FL_legmotor->setTorque(leg_L.TR_set);
     BR_legmotor->setTorque(leg_R.TL_set);
@@ -390,6 +420,7 @@ void MyRobot::jumpManager(void)
     {
     case JUMP_INIT:
     {
+        isJumpInTheAir = false;
         // Jump_Init(leg_L, leg_R);
         // Raise the legs to initiate the jump
         leg_L.L0.set = 0.17;
@@ -413,6 +444,7 @@ void MyRobot::jumpManager(void)
     {
         if ((leg_L.L0.now <= 0.18) && (leg_R.L0.now <= 0.18))
         {
+            isJumpInTheAir = false;
             leg_L.L0.set = 0.35;
             leg_R.L0.set = 0.35;
             jumpState = JUMP_LAUNCH;
@@ -425,14 +457,15 @@ void MyRobot::jumpManager(void)
         if ((leg_L.L0.now >= 0.33) && (leg_R.L0.now >= 0.33))
         // if ((getTime() - starttime > duration) // ((leg_L.angle2 >= 1.3*0.8) || (leg_R.angle2 >= 1.3*0.8))
         {
+            isJumpInTheAir = true;
             leg_L.L0.set = 0.26;
             leg_R.L0.set = 0.26;
             // leg_L.supportF_pid.clear();
             // leg_R.supportF_pid.clear();
-            // leg_L.TL_set = -15;
-            // leg_L.TR_set = -15;
-            // leg_R.TL_set = -15;
-            // leg_R.TR_set = -15;
+            //  leg_L.TL_set = -15;
+            //  leg_L.TR_set = -15;
+            //  leg_R.TL_set = -15;
+            //  leg_R.TR_set = -15;
             jumpState = JUMP_SHRINK;
             std::cout << "Jump state is: " << jumpState << std::endl;
         }
@@ -440,8 +473,10 @@ void MyRobot::jumpManager(void)
     }
     case JUMP_SHRINK:
     {
-        if ((leg_L.L0.now >= 0.27) && (leg_R.L0.now >= 0.27))
+        // landing event is detection
+        if ((leg_L->TL_now >= Torque_landing_threshold) || (leg_L->TR_now >= Torque_landing_threshold) || (leg_R->TL_now >= Torque_landing_threshold) || (leg_R->TR_now >= Torque_landing_threshold))
         {
+            isJumpInTheAir = false;
             jumpState = JUMP_IDLE;
             std::cout << "Jump state is: " << jumpState << std::endl;
         }
@@ -449,11 +484,14 @@ void MyRobot::jumpManager(void)
     }
     case JUMP_IDLE:
     {
+        // safety guard
+        isJumpInTheAir = false;
         break;
     }
     default:
     {
         // should not reach here
+        isJumpInTheAir = false;
         break;
     }
     }

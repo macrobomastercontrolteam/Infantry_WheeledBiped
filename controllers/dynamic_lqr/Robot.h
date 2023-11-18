@@ -77,6 +77,9 @@ public:
 
     LegClass leg_L, leg_R, leg_simplified;
     DataStructure velocity, yaw, pitch, roll;
+    bool isJumpInTheAir;
+    
+    const float Torque_landing_threshold = 0.1; // landing detection torque threshold
 
     static MyRobot *get()
     {

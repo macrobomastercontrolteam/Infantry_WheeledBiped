@@ -8,6 +8,6 @@ centralWidgetVisible: 1
 projectionMode: PERSPECTIVE
 renderingMode: PLAIN
 orthographicViewHeight: 1
-textFiles: 0 "controllers/dynamic_lqr/Pid.h"
+textFiles: 0 "controllers/dynamic_lqr/MyRobot.cpp"
 consoles: Console:All:All
 renderingDevicePerspectives: robot:camera;0;1;0;0

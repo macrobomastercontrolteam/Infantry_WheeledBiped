@@ -6,6 +6,6 @@ minimizedPerspectives: 000000ff00000000fd0000000300000000000003200000051efc01000
 maximizedDockId: -1
 centralWidgetVisible: 1
 orthographicViewHeight: 1
-textFiles: -1
+textFiles: 0 "controllers/dynamic_lqr/MyRobot.cpp"
 consoles: Console:All:All
 renderingDevicePerspectives: robot:camera;0;1;0;0

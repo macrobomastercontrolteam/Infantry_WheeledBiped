@@ -462,7 +462,7 @@ void MyRobot::jumpManager(void)
     case JUMP_SHRINK:
     {
         // landing event is detection
-        if ((leg_L->TL_now >= Torque_landing_threshold) || (leg_L->TR_now >= Torque_landing_threshold) || (leg_R->TL_now >= Torque_landing_threshold) || (leg_R->TR_now >= Torque_landing_threshold))
+        if ((leg_L.TL_now >= Torque_landing_threshold) || (leg_L.TR_now >= Torque_landing_threshold) || (leg_R.TL_now >= Torque_landing_threshold) || (leg_R.TR_now >= Torque_landing_threshold))
         {
             isJumpInTheAir = false;
             jumpState = JUMP_IDLE;

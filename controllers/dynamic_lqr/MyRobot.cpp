@@ -532,7 +532,10 @@ void MyRobot::jumpManager(void)
     case JUMP_SHRINK:
     {
         // Shrink until landing
-        if (max(abs(leg_L.F_set), abs(leg_R.F_set)) >= UNLOADED_ROBOT_HALF_WEIGHT)
+        Matrix<float, 2, 1> SupportF_L, SupportF_R;
+        SupportF_L = leg_L.Inv_VMC(-leg_L.TL_now, leg_L.TR_now);
+        SupportF_R = leg_R.Inv_VMC(-leg_R.TL_now, leg_R.TR_now);
+        if (abs(SupportF_L(0, 0) + SupportF_R(0, 0)) >= UNLOADED_ROBOT_HALF_WEIGHT * 4.5)
         {
             isJumpInTheAir = false;
             jumpState = JUMP_IDLE;

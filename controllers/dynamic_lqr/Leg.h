@@ -57,6 +57,7 @@ public:
     void ForwardKinematics(const float angle1, const float angle4, const float pitch);
     void InvKinematics(const float xc, const float yc);
     Matrix<float, 2, 1> VMC(const float F, const float Tp);
+    Matrix<float, 2, 1> Inv_VMC(const float TL, const float TR);
 };
 
 #endif

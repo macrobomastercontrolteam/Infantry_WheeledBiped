@@ -19,7 +19,7 @@ int main(int argc, char **argv)
     {
         wheel_legged.MyStep();
         wheel_legged.run();
-        if (wheel_legged.getTime() > 0.5)
+        if (wheel_legged.getTime() > 1)
         {
             outfile.open("data2.dat", ios::app);
             outfile << wheel_legged.getTime() << " "
@@ -49,6 +49,11 @@ int main(int argc, char **argv)
                     << wheel_legged.leg_R.TL_set << " "
                     << wheel_legged.leg_L.TR_set << " "
                     << wheel_legged.leg_R.TR_set << " "
+                    << wheel_legged.isJumpInTheAir << " "
+                    << wheel_legged.leg_L.F_set << " "
+                    << wheel_legged.leg_R.F_set << " "
+                    << wheel_legged.leg_L.dis.dot << " "
+                    << wheel_legged.leg_R.dis.dot << " "
                     << endl;
             outfile.close();
         }

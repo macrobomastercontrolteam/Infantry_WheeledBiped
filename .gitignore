@@ -15,3 +15,5 @@
 *.d
 \controllers\Dynamics_LQR_onVS\.vs
 \controllers\Dynamics_LQR_onVS\x64
+controllers/dynamic_lqr/build/release/dynamic_lqr.exe
+controllers/dynamic_lqr/dynamic_lqr.exe

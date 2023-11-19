@@ -101,7 +101,7 @@ public:
         return &robot;
     }
 
-    
+    void command_motor(void);
     void status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
                        DataStructure pitch, DataStructure roll, DataStructure yaw,
                        float dt, float v_set);

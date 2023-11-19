@@ -71,6 +71,35 @@ void MyRobot::Wait(int ms)
     while (s + start_time >= getTime())
         MyStep();
 }
+
+/**
+ * @brief Motor command with immediate protection
+ * @author: Tim
+ */
+void MyRobot::command_motor(void)
+{
+    // Torque Protection
+    if ((pitch.now >= PI / 3.0) || (pitch.now <= -PI / 3.0))
+    {
+        // Angle is too dangerous, stop control
+        HipTorque_MaxLimit = 0;
+        DriveTorque_MaxLimit = 0;
+    }
+    leg_L.TL_set = Limit(leg_L.TL_set, HipTorque_MaxLimit, -HipTorque_MaxLimit);
+    leg_L.TR_set = Limit(leg_L.TR_set, HipTorque_MaxLimit, -HipTorque_MaxLimit);
+    leg_R.TL_set = Limit(leg_R.TL_set, HipTorque_MaxLimit, -HipTorque_MaxLimit);
+    leg_R.TR_set = Limit(leg_R.TR_set, HipTorque_MaxLimit, -HipTorque_MaxLimit);
+    leg_L.TWheel_set = Limit(leg_L.TWheel_set, DriveTorque_MaxLimit, -DriveTorque_MaxLimit);
+    leg_R.TWheel_set = Limit(leg_R.TWheel_set, DriveTorque_MaxLimit, -DriveTorque_MaxLimit);
+
+    BL_legmotor->setTorque(leg_L.TL_set);
+    FL_legmotor->setTorque(leg_L.TR_set);
+    BR_legmotor->setTorque(leg_R.TL_set);
+    FR_legmotor->setTorque(leg_R.TR_set);
+
+    L_Wheelmotor->setTorque(leg_L.TWheel_set);
+    R_Wheelmotor->setTorque(leg_R.TWheel_set);
+}
 /**
  * @brief: 状态更新
  * @author: Dandelion
@@ -372,27 +401,7 @@ void MyRobot::run()
     yaw.set += yaw.set_dot * time_step * 0.001;
     status_update(&leg_simplified, &leg_L, &leg_R, this->pitch, this->roll, this->yaw, time_step * 0.001, velocity.set);
 
-    // Torque Protection
-    if ((pitch.now >= PI / 3.0) || (pitch.now <= -PI / 3.0))
-    {
-        // Angle is too dangerous, stop control
-        HipTorque_MaxLimit = 0;
-        DriveTorque_MaxLimit = 0;
-    }
-    leg_L.TL_set = Limit(leg_L.TL_set, HipTorque_MaxLimit, -HipTorque_MaxLimit);
-    leg_L.TR_set = Limit(leg_L.TR_set, HipTorque_MaxLimit, -HipTorque_MaxLimit);
-    leg_R.TL_set = Limit(leg_R.TL_set, HipTorque_MaxLimit, -HipTorque_MaxLimit);
-    leg_R.TR_set = Limit(leg_R.TR_set, HipTorque_MaxLimit, -HipTorque_MaxLimit);
-    leg_L.TWheel_set = Limit(leg_L.TWheel_set, DriveTorque_MaxLimit, -DriveTorque_MaxLimit);
-    leg_R.TWheel_set = Limit(leg_R.TWheel_set, DriveTorque_MaxLimit, -DriveTorque_MaxLimit);
-
-    BL_legmotor->setTorque(leg_L.TL_set);
-    FL_legmotor->setTorque(leg_L.TR_set);
-    BR_legmotor->setTorque(leg_R.TL_set);
-    FR_legmotor->setTorque(leg_R.TR_set);
-
-    L_Wheelmotor->setTorque(leg_L.TWheel_set);
-    R_Wheelmotor->setTorque(leg_R.TWheel_set);
+    command_motor();
 
     // ofstream outfile;
     // outfile.open("data2.dat", ios::trunc);

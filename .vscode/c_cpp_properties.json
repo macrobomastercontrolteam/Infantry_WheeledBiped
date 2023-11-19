@@ -3,7 +3,8 @@
     {
       "name": "windows-gcc-x86",
       "includePath": [
-        "${workspaceFolder}/**"
+        "${workspaceFolder}/**",
+        "C:/Program Files/Webots"
       ],
       "defines": [
         "_DEBUG",
@@ -11,7 +12,7 @@
         "_UNICODE"
       ],
       "windowsSdkVersion": "10.0.22000.0",
-      "compilerPath": "D:/bin/gcc.exe",
+      "compilerPath": "C:/mingw64/bin/gcc.exe",
       "cStandard": "${default}",
       "cppStandard": "${default}",
       "intelliSenseMode": "windows-gcc-x86"

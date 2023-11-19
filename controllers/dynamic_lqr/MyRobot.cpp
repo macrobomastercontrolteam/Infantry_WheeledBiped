@@ -96,8 +96,8 @@ void MyRobot::status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
     }
     else
     {
-        leg_L->F_set = -13.17 / 2 * 9.81;
-        leg_R->F_set = -13.17 / 2 * 9.81;
+        leg_L->F_set = UnloadedRobotHalfWeight;
+        leg_R->F_set = UnloadedRobotHalfWeight;
     }
     // 获取当前机器人状态信息
     leg_L->dis.now = encoder_wheelL->getValue() * 0.05;
@@ -337,12 +337,6 @@ void MyRobot::run()
 
     jumpManager();
 
-    // if (jumpState != JUMP_IDLE)
-    // {
-    // leg_L.L0.set = Limit(leg_L.L0.set, 0.35, 0.2);
-    // leg_R.L0.set = Limit(leg_R.L0.set, 0.35, 0.2);
-    // }
-
     /*测试用的，追踪一个持续4s的速度期望*/
     // if (sampling_flag == 1)
     // {
@@ -370,16 +364,27 @@ void MyRobot::run()
     //     }
     // }
 
+    leg_L.L0.set = Limit(leg_L.L0.set, LegL0_Max, LegL0_Min);
+    leg_R.L0.set = Limit(leg_R.L0.set, LegL0_Max, LegL0_Min);
+
     velocity.set = Limit(velocity.set, 2.5, -2.5);
     yaw.set_dot = Limit(yaw.set_dot, 2.0, -2.0);
     yaw.set += yaw.set_dot * time_step * 0.001;
     status_update(&leg_simplified, &leg_L, &leg_R, this->pitch, this->roll, this->yaw, time_step * 0.001, velocity.set);
 
-    /*输出力矩*/
-    leg_L.TL_set = Limit(leg_L.TL_set, 22.0, -22.0);
-    leg_L.TR_set = Limit(leg_L.TR_set, 22.0, -22.0);
-    leg_R.TL_set = Limit(leg_R.TL_set, 22.0, -22.0);
-    leg_R.TR_set = Limit(leg_R.TR_set, 22.0, -22.0);
+    // Torque Protection
+    if ((pitch.now >= PI / 3.0) || (pitch.now <= -PI / 3.0))
+    {
+        // Angle is too dangerous, stop control
+        HipTorque_MaxLimit = 0;
+        DriveTorque_MaxLimit = 0;
+    }
+    leg_L.TL_set = Limit(leg_L.TL_set, HipTorque_MaxLimit, -HipTorque_MaxLimit);
+    leg_L.TR_set = Limit(leg_L.TR_set, HipTorque_MaxLimit, -HipTorque_MaxLimit);
+    leg_R.TL_set = Limit(leg_R.TL_set, HipTorque_MaxLimit, -HipTorque_MaxLimit);
+    leg_R.TR_set = Limit(leg_R.TR_set, HipTorque_MaxLimit, -HipTorque_MaxLimit);
+    leg_L.TWheel_set = Limit(leg_L.TWheel_set, DriveTorque_MaxLimit, -DriveTorque_MaxLimit);
+    leg_R.TWheel_set = Limit(leg_R.TWheel_set, DriveTorque_MaxLimit, -DriveTorque_MaxLimit);
 
     BL_legmotor->setTorque(leg_L.TL_set);
     FL_legmotor->setTorque(leg_L.TR_set);
@@ -409,32 +414,25 @@ void MyRobot::jumpManager(void)
     case JUMP_INIT:
     {
         isJumpInTheAir = false;
-        // Jump_Init(leg_L, leg_R);
         // Raise the legs to initiate the jump
-        leg_L.L0.set = 0.17;
-        leg_R.L0.set = 0.17;
-
-        // Increase thrust for upward acceleration
-        // leg_L.TL_set = 10;
-        // leg_L.TR_set = 10;
-        // leg_R.TL_set = 10;
-        // leg_R.TR_set = 10;
-        // // Disable balance control while jumping
-        // balance_angle = 0.0;
-
-        // Time the jump
-        // starttime = getTime();
+        leg_L.L0.set = LegL0_Min;
+        leg_R.L0.set = LegL0_Min;
         jumpState = JUMP_CHARGE;
         std::cout << "Jump state is: " << jumpState << std::endl;
         break;
     }
     case JUMP_CHARGE:
     {
-        if ((leg_L.L0.now <= 0.18) && (leg_R.L0.now <= 0.18))
+        if ((leg_L.L0.now <= LegL0_Min_Threshold) && (leg_R.L0.now <= LegL0_Min_Threshold))
         {
             isJumpInTheAir = false;
-            leg_L.L0.set = 0.35;
-            leg_R.L0.set = 0.35;
+
+            // @TODO: Direct decaying torque control
+            leg_L.TL_set = HipTorque_Max;
+            leg_L.TR_set = HipTorque_Max;
+            leg_R.TL_set = HipTorque_Max;
+            leg_R.TR_set = HipTorque_Max;
+
             jumpState = JUMP_LAUNCH;
             std::cout << "Jump state is: " << jumpState << std::endl;
         }
@@ -442,18 +440,14 @@ void MyRobot::jumpManager(void)
     }
     case JUMP_LAUNCH:
     {
-        if ((leg_L.L0.now >= 0.33) && (leg_R.L0.now >= 0.33))
+        if ((leg_L.L0.now >= LegL0_Max_Threshold) && (leg_R.L0.now >= LegL0_Max_Threshold))
         // if ((getTime() - starttime > duration) // ((leg_L.angle2 >= 1.3*0.8) || (leg_R.angle2 >= 1.3*0.8))
         {
             isJumpInTheAir = true;
-            leg_L.L0.set = 0.26;
-            leg_R.L0.set = 0.26;
+            leg_L.L0.set = LegL0_Min_Threshold;
+            leg_R.L0.set = LegL0_Min_Threshold;
             // leg_L.supportF_pid.clear();
             // leg_R.supportF_pid.clear();
-            //  leg_L.TL_set = -15;
-            //  leg_L.TR_set = -15;
-            //  leg_R.TL_set = -15;
-            //  leg_R.TR_set = -15;
             jumpState = JUMP_SHRINK;
             std::cout << "Jump state is: " << jumpState << std::endl;
         }

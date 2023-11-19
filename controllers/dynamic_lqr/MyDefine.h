@@ -37,7 +37,7 @@ typedef const uint8_t uc8;   /*!< Read Only */
 
 #define PI 3.141593f
 #define PI_half 1.570796f
-#define G_gravity 9.8f
+#define G_gravity 9.81f
 #define cos_30 0.8660254f
 #define cos_60 0.5f
 #define cos_45 0.7071067f

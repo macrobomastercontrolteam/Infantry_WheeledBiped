@@ -78,8 +78,22 @@ public:
     LegClass leg_L, leg_R, leg_simplified;
     DataStructure velocity, yaw, pitch, roll;
     bool isJumpInTheAir;
-    
+
+    const float UnloadedRobotMass = 13.17;                             // unit is kg
+    const float UnloadedRobotHalfWeight = - UnloadedRobotMass / 2.0 * G_gravity; // unit is N
+
+    const float MotorTorque_Clearance = 0.5;
+    const float HipTorque_Max = 20.0 - MotorTorque_Clearance;
+    const float DriveTorque_Max = 5.0 - MotorTorque_Clearance;
+    float HipTorque_MaxLimit = HipTorque_Max;
+    float DriveTorque_MaxLimit = DriveTorque_Max;
+
     const float Torque_landing_threshold = 0.1; // landing detection torque threshold
+    const float LegL0_Min = 0.2;
+    const float LegL0_Max = 0.35;
+    const float LegL0_Clearance = 0.02;
+    const float LegL0_Min_Threshold = LegL0_Min + LegL0_Clearance;
+    const float LegL0_Max_Threshold = LegL0_Max - LegL0_Clearance;
 
     static MyRobot *get()
     {

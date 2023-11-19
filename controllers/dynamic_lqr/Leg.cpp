@@ -15,7 +15,7 @@ LegClass::LegClass()
     l3 = 0.200;
     l4 = 0.180;
     l5 = 0.120;
-    F_set = -12 / 2 * 9.81;
+    F_set = -12 / 2 * G_gravity;
     dis.now = 0;
     dis.last = 0; 
     dis.dot = 0;

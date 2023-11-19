@@ -104,24 +104,3 @@ float PID_Controller::compute(const float target, const float d_target,
     // this->output = (output < 0.01 && output > -0.01) ? 0 : output;
     return this->output;
 }
-
-float PID_Controller::burst_compute(const float target, const float d_target,
-                              const float input, const float d_input,
-                              const float dt, const float gain)
-{
-    this->err_now = (target - input) * gain;
-    this->err_dot = d_target - d_input;
-
-    this->output = this->kp * err_now + this->kd * err_dot;
-    if (this->ki > 1e-6 || this->ki < -1e-6)
-    {
-        this->err_sum += this->ki * err_now * dt;
-        Limit(this->err_sum, this->max_sum, -this->max_sum);
-        // 死区
-        this->err_sum = (this->err_sum > -0.1 && this->err_sum < 0.1) ? 0 : this->err_sum;
-        this->output += this->err_sum;
-    }
-    this->output = Limit(this->output, (this->max_output)*gain, -(this->max_output)*gain);
-    // this->output = (output < 0.01 && output > -0.01) ? 0 : output;
-    return this->output;
-}

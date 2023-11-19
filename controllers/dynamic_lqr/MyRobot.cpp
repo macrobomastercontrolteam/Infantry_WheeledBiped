@@ -196,83 +196,46 @@ void MyRobot::status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
 
     leg_L->Tp_set = -leg_sim->Tp_set / 2.0;
     leg_R->Tp_set = -leg_sim->Tp_set / 2.0;
+
     // pid补偿
     float out_L, out_R, out_roll, out_spilt, out_turn;
     out_roll = roll_pid.compute(roll.set, 0, roll.now, roll.dot, dt);
     out_spilt = split_pid.compute(0, 0, leg_L->angle0.now - leg_R->angle0.now, leg_L->angle0.dot - leg_R->angle0.dot, dt);
     out_turn = turn_pid.compute(yaw.set_dot, 0, yaw.dot, yaw.ddot, dt);
-    // react more aggressively at jump state
-    float pid_gain = 1;
-    if (jumpState == JUMP_LAUNCH)
-    {
-        float max_gain = 135;
-        // pid_gain = max_gain;
-        pid_gain = max_gain * (1 - exp(-10 * (0.35 - max(leg_L->L0.now, leg_R->L0.now)))) + 1;
-        // std::cout << "pid gain: " << pid_gain << std::endl;
-    }
+
     // 左腿VMC解算
     leg_L->L0.dot = (leg_L->L0.now - leg_L->L0.last) / dt;
     leg_L->L0.last = leg_L->L0.now;
-    if ((jumpState == JUMP_LAUNCH))// || (jumpState == JUMP_SHRINK))
-    {
-        out_L = leg_L->supportF_pid.burst_compute(leg_L->L0.set, 0, leg_L->L0.now, leg_L->L0.dot, dt, pid_gain);
-    }
-    else
-    {
-        out_L = leg_L->supportF_pid.compute(leg_L->L0.set, 0, leg_L->L0.now, leg_L->L0.dot, dt);
-    }
+    out_L = leg_L->supportF_pid.compute(leg_L->L0.set, 0, leg_L->L0.now, leg_L->L0.dot, dt);
     leg_L->F_set -= out_L;
     leg_L->F_set -= out_roll;
     leg_L->Tp_set -= out_spilt; // 这里的正负号没研究过，完全是根据仿真工程上得来的（其实这样也更快）
     Torque_L = leg_L->VMC(leg_L->F_set, leg_L->Tp_set);
-    leg_L->TL_set = -Torque_L(0, 0);
-    leg_L->TR_set = Torque_L(1, 0);
+    if (jumpState != JUMP_LAUNCH)
+    {
+        // Torque is direct set in JUMP_LAUNCH state
+        leg_L->TL_set = -Torque_L(0, 0);
+        leg_L->TR_set = Torque_L(1, 0);
+    }
     leg_L->TWheel_set -= out_turn;
+
     // 右腿VMC解算
     leg_R->L0.dot = (leg_R->L0.now - leg_R->L0.last) / dt;
     leg_R->L0.last = leg_R->L0.now;
-    if ((jumpState == JUMP_LAUNCH))// || (jumpState == JUMP_SHRINK))
-    {
-        out_R = leg_R->supportF_pid.burst_compute(leg_R->L0.set, 0, leg_R->L0.now, leg_R->L0.dot, dt, pid_gain);
-    }
-    else
-    {
-        out_R = leg_R->supportF_pid.compute(leg_R->L0.set, 0, leg_R->L0.now, leg_R->L0.dot, dt);
-    }
+    out_R = leg_R->supportF_pid.compute(leg_R->L0.set, 0, leg_R->L0.now, leg_R->L0.dot, dt);
+
     leg_R->F_set -= out_R;
     leg_R->F_set += out_roll;
     leg_R->Tp_set += out_spilt;
     Torque_R = leg_R->VMC(leg_R->F_set, leg_R->Tp_set);
-    leg_R->TL_set = -Torque_R(0, 0);
-    leg_R->TR_set = Torque_R(1, 0);
+    if (jumpState != JUMP_LAUNCH)
+    {
+        // Torque is direct set in JUMP_LAUNCH state
+        leg_R->TL_set = -Torque_R(0, 0);
+        leg_R->TR_set = Torque_R(1, 0);
+    }
     leg_R->TWheel_set += out_turn;
 }
-
-// void MyRobot::Jump_Init(LegClass &leg_L, LegClass &leg_R)
-// {
-//     initialLegPosition_L.now = leg_L.L0.now;
-//     initialLegPosition_R.now = leg_R.L0.now;
-//     //initialBalanceAngle = balance_angle;
-
-//     // if (getTime() - jump_start_time < jump_duration) {
-//     //     // Update the jump height profile based on the elapsed time
-//     //     float t_elapsed = getTime() - jump_start_time;
-//     //     float jump_height = 20; // Modify this value as needed for the desired jump height profile
-//     //     leg_L.L0.set = jump_height * t_elapsed / jump_duration;
-//     //     leg_R.L0.set = jump_height * t_elapsed / jump_duration;
-//     //     MyStep();  // Advance the simulation by one step
-
-//     // // Reset leg positions and thrust
-//     // leg_L.L0.set = initialLegPosition_L.now;
-//     // leg_R.L0.set = initialLegPosition_R.now;
-//     // leg_L.TL_set = 0.0;
-//     // leg_L.TR_set = 0.0;
-//     // leg_R.TL_set = 0.0;
-//     // leg_R.TR_set = 0.0;
-
-//     // // Re-enable balance control
-//     // balance_angle= initialBalanceAngle;
-// }
 
 void MyRobot::run()
 {
@@ -453,12 +416,24 @@ void MyRobot::jumpManager(void)
         // if ((getTime() - starttime > duration) // ((leg_L.angle2 >= 1.3*0.8) || (leg_R.angle2 >= 1.3*0.8))
         {
             isJumpInTheAir = true;
+
+            // PID control
             leg_L.L0.set = LegL0_Min_Threshold;
             leg_R.L0.set = LegL0_Min_Threshold;
+
             // leg_L.supportF_pid.clear();
             // leg_R.supportF_pid.clear();
+
             jumpState = JUMP_SHRINK;
             std::cout << "Jump state is: " << jumpState << std::endl;
+        }
+        else
+        {
+            // @TODO: Direct decaying torque control
+            leg_L.TL_set = HipTorque_Max;
+            leg_L.TR_set = HipTorque_Max;
+            leg_R.TL_set = HipTorque_Max;
+            leg_R.TR_set = HipTorque_Max;
         }
         break;
     }

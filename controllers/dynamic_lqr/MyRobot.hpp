@@ -108,7 +108,6 @@ public:
     void MyStep();
     void Wait(int ms);
     void run();
-    //void Jump_Init(LegClass &leg_L, LegClass &leg_R);
     void jumpManager();
     float limitVelocity(float speed_set, float L0);
     double getVelNow() { return velocity.now; };

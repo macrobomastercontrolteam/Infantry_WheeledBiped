@@ -169,7 +169,7 @@
     <ClInclude Include="..\dynamic_lqr\Leg.h" />
     <ClInclude Include="..\dynamic_lqr\MyDefine.h" />
     <ClInclude Include="..\dynamic_lqr\Pid.h" />
-    <ClInclude Include="..\dynamic_lqr\Robot.h" />
+    <ClInclude Include="..\dynamic_lqr\MyRobot.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\Webots2020\resources\languages\cpp\Makefile" />

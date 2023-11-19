@@ -5,7 +5,7 @@
  * @FilePath      \bishe\bishe.cpp
  */
 
-#include "Robot.h"
+#include "MyRobot.hpp"
 
 int main(int argc, char **argv)
 {

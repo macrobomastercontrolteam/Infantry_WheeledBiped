@@ -120,7 +120,7 @@
     <ClInclude Include="..\dynamic_lqr\Pid.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\dynamic_lqr\Robot.h">
+    <ClInclude Include="..\dynamic_lqr\MyRobot.hpp">
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="..\dynamic_lqr\MyDefine.h">

@@ -1,6 +1,6 @@
 
 
-#include "Robot.h"
+#include "MyRobot.hpp"
 #define NeedAngle 90
 
 MyRobot::MyRobot() : balance_angle{-0.0064}, jumpState{JUMP_IDLE}, isJumpInTheAir(false)

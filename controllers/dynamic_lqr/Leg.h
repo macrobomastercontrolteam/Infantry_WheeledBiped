@@ -51,6 +51,7 @@ public:
     Matrix<float, 2, 6> K;     // 反馈矩阵
     Matrix<float, 6, 1> X, Xd; // 状态矩阵，[theta, theta_dot, x, x_dot, phi, phi_dot]
     PID_Controller supportF_pid;
+    PID_Controller supportFInAir_pid; // PID when in air
 
     LegClass();
     void ForwardKinematics(const float angle1, const float angle4, const float pitch);

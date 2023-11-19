@@ -15,7 +15,7 @@ LegClass::LegClass()
     l3 = 0.200;
     l4 = 0.180;
     l5 = 0.120;
-    F_set = -12 / 2 * G_gravity;
+    F_set = -UNLOADED_ROBOT_HALF_WEIGHT;
     dis.now = 0;
     dis.last = 0; 
     dis.dot = 0;
@@ -31,7 +31,9 @@ LegClass::LegClass()
     K << -55.6021, -13.3377, -9.7707, -11.4781, 15.0562, 0.7386,
         19.9343, 5.5433, 4.2585, 4.9211, 138.1783, 4.1289;
     X << 0, 0, 0, 0, 0, 0;
-    supportF_pid.update(1000, 20.0, 500.0, 20);
+    // avoid saturation here to maintain scale in motor torques
+    supportF_pid.update(1000, 20.0, 500.0, 0);
+    supportFInAir_pid.update(1000, 20.0, 0.0, 0);
 }
 /**
  * @brief: 运动学逆解

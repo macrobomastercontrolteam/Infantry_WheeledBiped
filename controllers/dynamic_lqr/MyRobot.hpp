@@ -50,6 +50,8 @@ private:
     PID_Controller turn_pid;
     PID_Controller split_pid;
     PID_Controller roll_pid;
+    PID_Controller invPendulumInAir_pid;
+    PID_Controller wheelBrakeInAir_pid;
     Matrix<float, 12, 4> K_coeff;
 
     DataStructure initialLegPosition_L; // get inital position
@@ -77,16 +79,15 @@ public:
 
     LegClass leg_L, leg_R, leg_simplified;
     DataStructure velocity, yaw, pitch, roll;
-    bool isJumpInTheAir;
 
-    const float UnloadedRobotMass = 13.17;                             // unit is kg
-    const float UnloadedRobotHalfWeight = - UnloadedRobotMass / 2.0 * G_gravity; // unit is N
+    // Jump parameters
+    // @TODO: detection of landing by combination of sensors: motor torque, altitude, etc.
+    bool isJumpInTheAir;
+    const float JumpTorqueDecayTau = 0.01;
 
     const float MotorTorque_Clearance = 0.5;
-    const float HipTorque_Max = 20.0 - MotorTorque_Clearance;
-    const float DriveTorque_Max = 5.0 - MotorTorque_Clearance;
-    float HipTorque_MaxLimit = HipTorque_Max;
-    float DriveTorque_MaxLimit = DriveTorque_Max;
+    float HipTorque_MaxLimit = HIP_TORQUE_MAX - MotorTorque_Clearance;
+    float DriveTorque_MaxLimit = DRIVE_TORQUE_MAX - MotorTorque_Clearance;
 
     const float Torque_landing_threshold = 0.1; // landing detection torque threshold
     const float LegL0_Min = 0.2;
@@ -102,6 +103,12 @@ public:
     }
 
     void command_motor(void);
+    void inv_pendulum_ctrl(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
+                           DataStructure pitch,
+                           float dt, float v_set);
+    void torque_ctrl(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
+                     DataStructure pitch, DataStructure roll, DataStructure yaw,
+                     float dt, float v_set);
     void status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
                        DataStructure pitch, DataStructure roll, DataStructure yaw,
                        float dt, float v_set);

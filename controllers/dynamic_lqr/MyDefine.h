@@ -64,3 +64,9 @@ typedef const uint8_t uc8;   /*!< Read Only */
 #define InnerProduct(vector1, vector2) \
     (float)(vector1.x * vector2.x + vector1.y * vector2.y)
 #define Deadzone(input, threshold) ((fabs(input) < threshold) ? 0 : input)
+
+// Hardware Properties
+#define HIP_TORQUE_MAX 20.0f
+#define DRIVE_TORQUE_MAX 5.0f
+#define UNLOADED_ROBOT_MASS 13.17f                                          // unit is kg
+#define UNLOADED_ROBOT_HALF_WEIGHT (UNLOADED_ROBOT_MASS / 2.0f * G_gravity) // unit is N

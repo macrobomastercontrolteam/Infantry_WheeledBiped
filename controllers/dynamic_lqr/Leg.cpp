@@ -135,3 +135,17 @@ Matrix<float, 2, 1> LegClass::VMC(const float F, const float Tp)
     ActualF = Trans * VirtualF;
     return ActualF;
 }
+
+Matrix<float, 2, 1> LegClass::Inv_VMC(const float TL, const float TR)
+{
+    Matrix<float, 2, 2> TransInv;
+    Matrix<float, 2, 1> VirtualF;
+    Matrix<float, 2, 1> ActualF;
+    TransInv << sin(angle0.now + angle2) / (l1 * sin(angle1 - angle2)),
+        -sin(angle0.now + angle3) / (l4 * sin(angle3 - angle4)),
+        -(L0.now * cos(angle0.now + angle2)) / (l1 * sin(angle1 - angle2)),
+        (L0.now * cos(angle0.now + angle3)) / (l4 * sin(angle3 - angle4));
+    ActualF << TL, TR;
+    VirtualF = TransInv * ActualF;
+    return ActualF;
+}

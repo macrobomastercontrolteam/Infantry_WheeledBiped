@@ -33,8 +33,9 @@ MyRobot::MyRobot() : balance_angle{-0.0064}, jumpState{JUMP_IDLE}, isJumpInTheAi
     turn_pid.update(3.0, 0, 0.03, 3); // 针对角速度进行PD控制
     split_pid.update(100.0, 0.0, 10, HipTorque_MaxLimit);
     roll_pid.update(1000, 0.0, 10, 25);
-    invPendulumInAir_pid.update(10000.0, 10.0, 10, HipTorque_MaxLimit);
-    wheelBrakeInAir_pid.update(10000.0, 10.0, 1, DriveTorque_MaxLimit);
+    invPendulumInAir_pid.update(200.0, 0.0, 5, HipTorque_MaxLimit);
+    wheelBrakeInAirL_pid.update(5, 0.05, 0, DriveTorque_MaxLimit);
+    wheelBrakeInAirR_pid.update(5, 0.05, 0, DriveTorque_MaxLimit);
 
     K_coeff << -228.312861923588, 294.032841402069, -161.859980835154, -27.9124607725149,
         -311.553508160858, 488.738545499858, -288.194998275156, 69.8532732024956,
@@ -80,7 +81,7 @@ void MyRobot::Wait(int ms)
 void MyRobot::command_motor(void)
 {
     // Emergency Brake
-    if ((pitch.now >= PI / 3.0) || (pitch.now <= -PI / 3.0))
+    if ((pitch.now >= PI / 2.0) || (pitch.now <= -PI / 2.0))
     {
         // Angle is too dangerous, stop control
         HipTorque_MaxLimit = 0;
@@ -177,12 +178,12 @@ void MyRobot::inv_pendulum_ctrl(LegClass *leg_sim, LegClass *leg_L, LegClass *le
 {
     if (isJumpInTheAir)
     {
-        leg_L->TWheel_set = wheelBrakeInAir_pid.compute(0, 0, leg_L->dis.dot, leg_L->dis.ddot, dt);
-        leg_R->TWheel_set = wheelBrakeInAir_pid.compute(0, 0, leg_R->dis.dot, leg_R->dis.ddot, dt);
+        leg_L->TWheel_set = wheelBrakeInAirL_pid.compute(0, 0, leg_L->dis.dot, 0, dt);
+        leg_R->TWheel_set = wheelBrakeInAirR_pid.compute(0, 0, leg_R->dis.dot, 0, dt);
 
         // @TODO: predict best simLeg angle before landing based on initial velocity
         float out_invPendulumInAir = invPendulumInAir_pid.compute(0, 0, leg_sim->angle0.now, leg_sim->angle0.dot, dt);
-        leg_L->Tp_set = -out_invPendulumInAir; // 这里的正负号没研究过，完全是根据仿真工程上得来的（其实这样也更快）
+        leg_L->Tp_set = -out_invPendulumInAir;
         leg_R->Tp_set = -out_invPendulumInAir;
     }
     else
@@ -214,8 +215,17 @@ void MyRobot::inv_pendulum_ctrl(LegClass *leg_sim, LegClass *leg_L, LegClass *le
         leg_sim->Tp_set = Matrix_u(1, 0);
 
         // output
-        leg_L->TWheel_set = leg_sim->TWheel_set / 2.0;
-        leg_R->TWheel_set = leg_sim->TWheel_set / 2.0;
+        if (jumpState == JUMP_LAUNCH)
+        {
+            // Maintain wheel speed during JUMP_LAUNCH, to avoid singularity in LQR when wheel leaves ground
+            leg_L->TWheel_set = 0;
+            leg_R->TWheel_set = 0;
+        }
+        else
+        {
+            leg_L->TWheel_set = leg_sim->TWheel_set / 2.0;
+            leg_R->TWheel_set = leg_sim->TWheel_set / 2.0;
+        }
         leg_L->Tp_set = -leg_sim->Tp_set / 2.0;
         leg_R->Tp_set = -leg_sim->Tp_set / 2.0;
     }
@@ -298,7 +308,7 @@ void MyRobot::torque_ctrl(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
     }
 
     /****************** Drive motor torque adjustment by PID ******************/
-    if (isJumpInTheAir == false)
+    if ((jumpState != JUMP_LAUNCH) && (isJumpInTheAir == false))
     {
         float out_turn = turn_pid.compute(yaw.set_dot, 0, yaw.dot, yaw.ddot, dt);
         leg_L->TWheel_set -= out_turn;
@@ -475,7 +485,7 @@ void MyRobot::jumpManager(void)
         roll.set = 0;
 
         jumpState = JUMP_CHARGE;
-        std::cout << "Jump state is: " << jumpState << std::endl;
+        std::cout << "Jump state is: JUMP_CHARGE" << std::endl;
         break;
     }
     case JUMP_CHARGE:
@@ -485,20 +495,20 @@ void MyRobot::jumpManager(void)
         {
             isJumpInTheAir = false;
             jumpState = JUMP_LAUNCH;
-            std::cout << "Jump state is: " << jumpState << std::endl;
+            std::cout << "Jump state is: JUMP_LAUNCH" << std::endl;
         }
         break;
     }
     case JUMP_LAUNCH:
     {
         if (max(leg_L.L0.now, leg_R.L0.now) >= LegL0_Max_Threshold)
-        // if ((getTime() - starttime > duration) // ((leg_L.angle2 >= 1.3*0.8) || (leg_R.angle2 >= 1.3*0.8))
         {
             isJumpInTheAir = true;
 
             // Back to PID control
-            leg_L.L0.set = LegL0_Min_Threshold;
-            leg_R.L0.set = LegL0_Min_Threshold;
+            float LegL0_BufferLength = LegL0_Min + (LegL0_Max - LegL0_Min) / 2;
+            leg_L.L0.set = LegL0_BufferLength;
+            leg_R.L0.set = LegL0_BufferLength;
             // Avoid integral windup
             leg_L.supportFInAir_pid.clear();
             leg_R.supportFInAir_pid.clear();
@@ -506,7 +516,8 @@ void MyRobot::jumpManager(void)
             leg_R.supportF_pid.clear();
 
             jumpState = JUMP_SHRINK;
-            std::cout << "Jump state is: " << jumpState << std::endl;
+            std::cout << "isJumpInTheAir: " << isJumpInTheAir << std::endl;
+            std::cout << "Jump state is: JUMP_SHRINK" << std::endl;
         }
         else
         {
@@ -521,11 +532,15 @@ void MyRobot::jumpManager(void)
     case JUMP_SHRINK:
     {
         // Shrink until landing
-        if (max(abs(leg_L.F_set), abs(leg_R.F_set)) >= UNLOADED_ROBOT_HALF_WEIGHT)
+        Matrix<float, 2, 1> SupportF_L, SupportF_R;
+        SupportF_L = leg_L.Inv_VMC(-leg_L.TL_now, leg_L.TR_now);
+        SupportF_R = leg_R.Inv_VMC(-leg_R.TL_now, leg_R.TR_now);
+        if (abs(SupportF_L(0, 0) + SupportF_R(0, 0)) >= UNLOADED_ROBOT_HALF_WEIGHT * 4.5)
         {
             isJumpInTheAir = false;
             jumpState = JUMP_IDLE;
-            std::cout << "Jump state is: " << jumpState << std::endl;
+            std::cout << "isJumpInTheAir: " << isJumpInTheAir << std::endl;
+            std::cout << "Jump state is: JUMP_IDLE" << std::endl;
         }
         break;
     }

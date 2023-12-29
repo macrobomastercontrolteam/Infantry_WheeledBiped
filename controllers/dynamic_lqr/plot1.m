@@ -41,7 +41,7 @@ figure;
 
 subplot(3,3,1);
 plot(t, TorqueL, t, TorqueR);
-legend("Drive Torque Left" ,"Drive Torque Right",'Location','southwest');
+legend("Drive L" ,"Drive R",'Location','southwest');
 xlabel("t(s)");
 ylabel("Torque(Nm)");
 grid on;
@@ -49,28 +49,28 @@ grid on;
 %%%%%%%%%% set comparison %%%%%%%%%%
 subplot(3,3,2);
 plot(t, TorqueLL_set, t, TorqueRL_set, t, TorqueLR_set, t, TorqueRR_set);
-legend("Left Joint Torque Left set" ,"Right Joint Torque Left set", "Left Joint Torque right set" ,"Right Joint Torque right set",'Location','southwest');
+legend("Joint LL set" ,"Joint RL set", "Joint LR set" ,"Joint RR set",'Location','southwest');
 xlabel("t(s)");
 ylabel("Torque(Nm)");
 grid on;
 
 subplot(3,3,3);
 plot(t, TorqueLL_now, t, TorqueRL_now, t, TorqueLR_now, t, TorqueRR_now);
-legend("Left Joint Torque Left" ,"Right Joint Torque Left", "Left Joint Torque Right" ,"Right Joint Torque Right",'Location','southwest');
+legend("Joint LL" ,"Joint RL", "Joint LR" ,"Joint RR",'Location','southwest');
 xlabel("t(s)");
 ylabel("Torque(Nm)");
 grid on;
 
 % subplot(3,3,2);
 % plot(t, TorqueLL_now, t, TorqueRL_now, t, TorqueLL_set, t, TorqueRL_set);
-% legend("Left Joint Torque Left" ,"Right Joint Torque Left", "Left Joint Torque Left set" ,"Right Joint Torque Left set",'Location','southwest');
+% legend("Joint LL" ,"Joint RL", "Joint LL set" ,"Joint RL set",'Location','southwest');
 % xlabel("t(s)");
 % ylabel("Torque(Nm)");
 % grid on;
 
 % subplot(3,3,3);
 % plot(t, TorqueLR_now, t, TorqueRR_now, t, TorqueLL_set, t, TorqueRR_set);
-% legend("Left Joint Torque Right" ,"Right Joint Torque Right", "Left Joint Torque Right set" ,"Right Joint Torque Right set",'Location','southwest');
+% legend("Joint LR" ,"Joint RR", "Joint LR set" ,"Joint RR set",'Location','southwest');
 % xlabel("t(s)");
 % ylabel("Torque(Nm)");
 % grid on;
@@ -78,14 +78,14 @@ grid on;
 %%%%%%%%%% Now vs Set %%%%%%%%%%
 % subplot(3,3,2);
 % plot(t, TorqueLL_now, t, TorqueLL_set);
-% legend("Left Joint Torque Left", "Left Joint Torque Left set", 'Location','southwest');
+% legend("Joint LL", "Joint LL set", 'Location','southwest');
 % xlabel("t(s)");
 % ylabel("Torque(Nm)");
 % grid on;
 
 % subplot(3,3,3);
 % plot(t, TorqueRL_now, t, TorqueRL_set);
-% legend("Right Joint Torque Left" ,"Right Joint Torque Left set",'Location','southwest');
+% legend("Joint RL" ,"Joint RL set",'Location','southwest');
 % xlabel("t(s)");
 % ylabel("Torque(Nm)");
 % grid on;

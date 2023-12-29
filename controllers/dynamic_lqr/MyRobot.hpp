@@ -51,7 +51,8 @@ private:
     PID_Controller split_pid;
     PID_Controller roll_pid;
     PID_Controller invPendulumInAir_pid;
-    PID_Controller wheelBrakeInAir_pid;
+    PID_Controller wheelBrakeInAirL_pid;
+    PID_Controller wheelBrakeInAirR_pid;
     Matrix<float, 12, 4> K_coeff;
 
     DataStructure initialLegPosition_L; // get inital position
@@ -92,6 +93,7 @@ public:
     const float Torque_landing_threshold = 0.1; // landing detection torque threshold
     const float LegL0_Min = 0.2;
     const float LegL0_Max = 0.35;
+    const float LegL0_Mid = (LegL0_Min+LegL0_Max)/2;
     const float LegL0_Clearance = 0.02;
     const float LegL0_Min_Threshold = LegL0_Min + LegL0_Clearance;
     const float LegL0_Max_Threshold = LegL0_Max - LegL0_Clearance;

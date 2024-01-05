@@ -1,12 +1,12 @@
 /***
  * @CreatedTime   2022-04-23 19:57:04
- * @LastEditors   未定义
+ * @LastEditors   Undefined
  * @LastEditTime  2022-04-24 20:16:23
  * @FilePath      \bishe\PID_Controller.cpp
  */
 /***
  * @CreatedTime   2022-04-23 19:57:04
- * @LastEditors   未定义
+ * @LastEditors   Undefined
  * @LastEditTime  2022-04-23 20:07:20
  * @FilePath      \bishe\PID_Controller.cpp
  */
@@ -40,12 +40,12 @@ void PID_Controller::update(float _p, float _i, float _d, float _max_out)
         max_output = 99999;
 }
 /**
- * @brief:
+ * @brief:PID Controller
  * @author: Dandelion
  * @Date: 2023-03-27 15:53:25
  * @param {float} set
  * @param {float} real
- * @param {float} angle_w 微分项
+ * @param {float} angle_w 
  * @return {*}
  */
 float PID_Controller::compute(float set, float real, float angle_w)

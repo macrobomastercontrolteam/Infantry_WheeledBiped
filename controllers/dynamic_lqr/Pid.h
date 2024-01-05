@@ -1,6 +1,6 @@
 /***
  * @CreatedTime   2021-12-16 16:27:27
- * @LastEditors   未定义
+ * @LastEditors   Undefined
  * @LastEditTime  2021-12-16 16:28:37
  * @FilePath      \TwoWheelCpp\pid.h
  */
@@ -20,7 +20,7 @@ private:
     float err_now, err_last, err_sum, err_dot;
     float output, max_sum, max_output;
 
-    float a_Filter; // 滤波
+    float a_Filter;
     float err_lowout;
 
 public:

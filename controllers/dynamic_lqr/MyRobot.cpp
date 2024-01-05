@@ -25,12 +25,12 @@ MyRobot::MyRobot() : balance_angle{-0.0064}, jumpState{JUMP_IDLE}, isJumpInTheAi
 
     BL_legmotor->enableTorqueFeedback(time_step), BR_legmotor->enableTorqueFeedback(time_step), FL_legmotor->enableTorqueFeedback(time_step), FR_legmotor->enableTorqueFeedback(time_step);
     L_Wheelmotor->enableTorqueFeedback(time_step), R_Wheelmotor->enableTorqueFeedback(time_step);
-    // 参数初始化
+    // Parameters Initialized
     roll.set = 0, yaw.set = 0, yaw.set_dot = 0,
     velocity.set = 0, velocity.now = 0;
     acc_up_max = 1.0, acc_down_max = 1.0;
-    // 调参
-    turn_pid.update(3.0, 0, 0.03, 3); // 针对角速度进行PD控制
+    // Parameters adjusted
+    turn_pid.update(3.0, 0, 0.03, 3); // PD control referring to angular velocity
     split_pid.update(100.0, 0.0, 10, HipTorque_MaxLimit);
     roll_pid.update(1000, 0.0, 10, 25);
     invPendulumInAir_pid.update(200.0, 0.0, 5, HipTorque_MaxLimit);
@@ -49,6 +49,19 @@ MyRobot::MyRobot() : balance_angle{-0.0064}, jumpState{JUMP_IDLE}, isJumpInTheAi
         468.542266417460, -571.202248474433, 243.891642697369, 104.117722046717,
         -13.4938391590358, 19.1993789061047, -10.4541636935974, 2.47975499342254,
         13.6341049836551, -16.7207310260419, 7.21326317048111, 3.11249772591918;
+
+    K_coeff_inAir << 0, 0, 0, 0,
+              -75.1602,  117.0037,  191.5325,   17.9267,
+                0,         0,         0,         0,
+               24.8338,   21.9035,   -4.0933,   22.7593,
+                0,         0,         0,         0,
+                0,         0,         0,         0,
+                0,         0,         0,         0,
+                0,         0,         0,         0,
+                0,         0,         0,         0,
+                0,         0,         0,         0,
+                0,         0,         0,         0,
+                0,         0,         0,         0;
 }
 MyRobot::~MyRobot()
 {
@@ -60,7 +73,7 @@ void MyRobot::MyStep()
         exit(EXIT_SUCCESS);
 }
 /**
- * @brief: 毫秒级延时
+ * @brief: Millisecond Delay
  * @author: Dandelion
  * @Date: 2023-03-27 16:35:24
  * @param {int} ms
@@ -103,7 +116,7 @@ void MyRobot::command_motor(void)
     R_Wheelmotor->setTorque(leg_R.TWheel_set);
 }
 /**
- * @brief: 状态更新
+ * @brief: status update
  * @author: Dandelion
  * @Date: 2023-04-01 00:10:38
  * @param {LegClass} *leg_sim
@@ -119,7 +132,7 @@ void MyRobot::status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
                             const DataStructure pitch, const DataStructure roll, const DataStructure yaw,
                             const float dt, float v_set)
 {
-    // 获取当前机器人状态信息
+    // Update robot status 
     leg_L->dis.now = encoder_wheelL->getValue() * 0.05;
     leg_R->dis.now = encoder_wheelR->getValue() * 0.05;
     leg_sim->dis.now = (leg_L->dis.now + leg_R->dis.now) / 2.0;
@@ -146,7 +159,7 @@ void MyRobot::status_update(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
     leg_L->TWheel_now = L_Wheelmotor->getTorqueFeedback();
     leg_R->TWheel_now = L_Wheelmotor->getTorqueFeedback();
 
-    // 角度更新，统一从右视图看吧
+    // Update angles
     leg_L->angle1 = 2.0 / 3.0 * PI - encoder_FL->getValue();
     leg_L->angle4 = 1.0 / 3.0 * PI + encoder_BL->getValue();
     leg_L->ForwardKinematics(leg_L->angle1, leg_L->angle4, pitch.now);
@@ -176,84 +189,87 @@ void MyRobot::inv_pendulum_ctrl(LegClass *leg_sim, LegClass *leg_L, LegClass *le
                                 const DataStructure pitch,
                                 const float dt, float v_set)
 {
-    if (isJumpInTheAir)
-    {
-        leg_L->TWheel_set = wheelBrakeInAirL_pid.compute(0, 0, leg_L->dis.dot, 0, dt);
-        leg_R->TWheel_set = wheelBrakeInAirR_pid.compute(0, 0, leg_R->dis.dot, 0, dt);
+    // calculate matrix k based upon L0.now
+    Matrix<float, 2, 1> Matrix_u;
+    
+    // Choose the K_coeff based upon if the robot is jump in the air
+    Matrix<float, 12, 4> K_coeff_now;
+    K_coeff_now = (isJumpInTheAir) ? K_coeff_inAir : K_coeff;
 
-        // @TODO: predict best simLeg angle before landing based on initial velocity
-        float out_invPendulumInAir = invPendulumInAir_pid.compute(0, 0, leg_sim->angle0.now, leg_sim->angle0.dot, dt);
-        leg_L->Tp_set = -out_invPendulumInAir;
-        leg_R->Tp_set = -out_invPendulumInAir;
+    // leg_L->TWheel_set = wheelBrakeInAirL_pid.compute(0, 0, leg_L->dis.dot, 0, dt);
+    // leg_R->TWheel_set = wheelBrakeInAirR_pid.compute(0, 0, leg_R->dis.dot, 0, dt);
+
+    // // @TODO: predict best simLeg angle before landing based on initial velocity
+    // float out_invPendulumInAir = invPendulumInAir_pid.compute(0, 0, leg_sim->angle0.now, leg_sim->angle0.dot, dt);
+    // leg_L->Tp_set = -out_invPendulumInAir;
+    // leg_R->Tp_set = -out_invPendulumInAir;
+
+    // Generating K matrix based on current leg lengths
+    for (size_t col = 0; col < 6; col++)
+    {
+        /* code */
+        for (size_t row = 0; row < 2; row++)
+        {
+            /* code */
+            int num = col * 2 + row;
+            leg_sim->K(row, col) = K_coeff_now(num, 0) * pow(leg_sim->L0.now, 3) +
+                                   K_coeff_now(num, 1) * pow(leg_sim->L0.now, 2) +
+                                   K_coeff_now(num, 2) * leg_sim->L0.now +
+                                   K_coeff_now(num, 3);
+        }
+    }
+    // Update status
+    leg_sim->dis.set += v_set * dt;
+    leg_sim->Xd << 0, 0, leg_sim->dis.set, 0, 0, 0;
+    leg_sim->X << leg_sim->angle0.now, leg_sim->angle0.dot, leg_sim->dis.now, leg_sim->dis.dot, pitch.now, pitch.dot;
+    Matrix_u = leg_sim->K * (leg_sim->Xd - leg_sim->X); // u = K(Xd-X);
+    leg_sim->TWheel_set = Matrix_u(0, 0);
+    leg_sim->Tp_set = Matrix_u(1, 0);
+
+    // output
+    if (jumpState == JUMP_LAUNCH)
+    {
+        // Maintain wheel speed during JUMP_LAUNCH, to avoid singularity in LQR when wheel leaves ground
+        leg_L->TWheel_set = 0;
+        leg_R->TWheel_set = 0;
     }
     else
     {
-        // 计算K矩阵数据，根据L0.now拟合得到
-        Matrix<float, 2, 1> Matrix_u;
-
-        // 根据当前杆长计算K矩阵的各项值
-        for (size_t col = 0; col < 6; col++)
-        {
-            /* code */
-            for (size_t row = 0; row < 2; row++)
-            {
-                /* code */
-                int num = col * 2 + row;
-                leg_sim->K(row, col) = K_coeff(num, 0) * pow(leg_sim->L0.now, 3) +
-                                       K_coeff(num, 1) * pow(leg_sim->L0.now, 2) +
-                                       K_coeff(num, 2) * leg_sim->L0.now +
-                                       K_coeff(num, 3);
-            }
-        }
-
-        // 状态更新
-        leg_sim->dis.set += v_set * dt;
-        leg_sim->Xd << 0, 0, leg_sim->dis.set, 0, 0, 0;
-        leg_sim->X << leg_sim->angle0.now, leg_sim->angle0.dot, leg_sim->dis.now, leg_sim->dis.dot, pitch.now, pitch.dot;
-        Matrix_u = leg_sim->K * (leg_sim->Xd - leg_sim->X); // u = K(Xd-X);
-        leg_sim->TWheel_set = Matrix_u(0, 0);
-        leg_sim->Tp_set = Matrix_u(1, 0);
-
-        // output
-        if (jumpState == JUMP_LAUNCH)
-        {
-            // Maintain wheel speed during JUMP_LAUNCH, to avoid singularity in LQR when wheel leaves ground
-            leg_L->TWheel_set = 0;
-            leg_R->TWheel_set = 0;
-        }
-        else
-        {
-            leg_L->TWheel_set = leg_sim->TWheel_set / 2.0;
-            leg_R->TWheel_set = leg_sim->TWheel_set / 2.0;
-        }
-        leg_L->Tp_set = -leg_sim->Tp_set / 2.0;
-        leg_R->Tp_set = -leg_sim->Tp_set / 2.0;
+        leg_L->TWheel_set = leg_sim->TWheel_set / 2.0;
+        leg_R->TWheel_set = leg_sim->TWheel_set / 2.0;
     }
+    leg_L->Tp_set = -leg_sim->Tp_set / 2.0;
+    leg_R->Tp_set = -leg_sim->Tp_set / 2.0;
+
 }
 
 void MyRobot::torque_ctrl(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,
                           const DataStructure pitch, const DataStructure roll, const DataStructure yaw,
                           const float dt, float v_set)
 {
+    Matrix<float, 12, 4> K_coeff_now;
     if (jumpState == JUMP_LAUNCH)
     {
         // Force is directly set in JUMP_LAUNCH state
+        K_coeff_now = K_coeff;
     }
     else if (isJumpInTheAir)
     {
         // flying
         leg_L->F_set = 0;
         leg_R->F_set = 0;
+        K_coeff_now = K_coeff_inAir;
     }
     else
     {
         leg_L->F_set = -UNLOADED_ROBOT_HALF_WEIGHT;
         leg_R->F_set = -UNLOADED_ROBOT_HALF_WEIGHT;
+        K_coeff_now = K_coeff_inAir;
     }
 
     /****************** Hip joint torque adjustment by PID ******************/
     float out_spilt = split_pid.compute(0, 0, leg_L->angle0.now - leg_R->angle0.now, leg_L->angle0.dot - leg_R->angle0.dot, dt);
-    leg_L->Tp_set -= out_spilt; // 这里的正负号没研究过，完全是根据仿真工程上得来的（其实这样也更快）
+    leg_L->Tp_set -= out_spilt; 
     leg_R->Tp_set += out_spilt;
 
     if (isJumpInTheAir == false)
@@ -336,7 +352,7 @@ void MyRobot::run()
     yaw.ddot = (yaw.dot - yaw_dot_last) / (time_step * 0.001);
     yaw_dot_last = yaw.dot;
     // float robot_x = gps->getValues()[0];
-    pitch.now -= balance_angle; // 得到相对于平衡pitch的角度
+    pitch.now -= balance_angle; 
 
     if (yaw_get - yaw.last > 1.5 * PI)
         yaw.now += yaw_get - yaw.last - 2 * PI;
@@ -349,7 +365,7 @@ void MyRobot::run()
     if (time == 0)
         yaw.set = yaw.now;
 
-    // 时序更新
+    //Setup keys
     int key = mkeyboard->getKey();
     while (key > 0)
     {
@@ -411,33 +427,6 @@ void MyRobot::run()
         key = mkeyboard->getKey();
     }
 
-    /*测试用的，追踪一个持续4s的速度期望*/
-    // if (sampling_flag == 1)
-    // {
-    //     if (time - sampling_time < 1)
-    //     {
-    //         velocity.set = 0;
-    //     }
-    //     else if (time - sampling_time < 5)
-    //     {
-    //         // velocity.set += acc_up_max * time_step * 0.001;
-    //         velocity.set = 1.0;
-    //     }
-    //     // else if (time < 6)
-    //     // {
-    //     //     velocity.set = 3;
-    //     // }
-    //     // else if (time < 9)
-    //     // {
-    //     //     velocity.set -= acc_down_max * time_step * 0.001;
-    //     // }
-    //     else
-    //     {
-    //         velocity.set = 0;
-    //         sampling_flag = 0;
-    //     }
-    // }
-
     jumpManager();
 
     leg_L.L0.set = Limit(leg_L.L0.set, LegL0_Max, LegL0_Min);
@@ -461,11 +450,7 @@ void MyRobot::run()
     // outfile.close();
 }
 /**
- * @brief: 限制速度
- * @author: Dandelion
- * @Date: 2023-04-18 19:45:57
- * @param {float} L0
- * @return {*}
+ * @brief: manage the state of jump
  */
 
 void MyRobot::jumpManager(void)
@@ -559,6 +544,13 @@ void MyRobot::jumpManager(void)
     }
 }
 
+/**
+ * @brief: limit velocity
+ * @author: Dandelion
+ * @Date: 2023-04-18 19:45:57
+ * @param {float} L0
+ * @return {*}
+ */
 float MyRobot::limitVelocity(float speed_set, float L0)
 {
     float speed_max = -30 * L0 + 10.7;

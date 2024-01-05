@@ -1,6 +1,6 @@
 /***
  * @CreatedTime   2022-04-23 19:57:04
- * @LastEditors   未定义
+ * @LastEditors   Undefined
  * @LastEditTime  2022-04-25 15:29:11
  * @FilePath      \bishe\Robot.h
  */
@@ -32,9 +32,9 @@ class MyRobot : public Robot
 {
 private:
     /* data */
-    u8 time_step;        // 毫秒
-    float time;          // 秒
-    float sampling_time; // 开始检测的时间,秒
+    u8 time_step;        // millisecond
+    float time;          // second
+    float sampling_time; 
     float yaw_get;
     int starttime;
     float balance_angle;
@@ -54,6 +54,7 @@ private:
     PID_Controller wheelBrakeInAirL_pid;
     PID_Controller wheelBrakeInAirR_pid;
     Matrix<float, 12, 4> K_coeff;
+    Matrix<float, 12, 4> K_coeff_inAir;
 
     DataStructure initialLegPosition_L; // get inital position
     DataStructure initialLegPosition_R;

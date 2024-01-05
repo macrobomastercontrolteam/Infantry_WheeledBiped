@@ -1,5 +1,5 @@
 /*
- * @Description: 腿的类
+ * @Description: Leg Types
  * @Version: 2.0
  * @Author: Dandelion
  * @Date: 2023-03-24 17:20:36
@@ -21,35 +21,35 @@ typedef struct DATA
     float last;
     float set;
     float set_dot;
-    float dot;  // 微分
-    float ddot; // 二阶微分
+    float dot;  // derivative
+    float ddot; // second derivative
 } DataStructure;
 
 class LegClass
 {
 private:
-    float l1, l2, l3, l4, l5; // 单位是mm
+    float l1, l2, l3, l4, l5; // Unit mm
 
 public:
     // data
-    float angle1, angle2, angle3, angle4; // 弧度制
+    float angle1, angle2, angle3, angle4; // radians
     DataStructure angle0;
     DataStructure L0;
     DataStructure dis;
-    // 坐标(五连杆坐标系下的，原点在五连杆的中垂线上)
+    // Coordinates (in the coordinate system of the five-bar linkage, with the origin on the bisector of the five-bar linkage)
     float xa, ya;
     float xb, yb;
     float xc, yc;
     float xd, yd;
     float xe, ye;
-    // 力与力矩
-    float TL_now, TR_now, TWheel_now; // 统一看右视图？
+    // Force and Torque
+    float TL_now, TR_now, TWheel_now; //right side view
     float TL_set, TR_set, TWheel_set;
-    float F_set;  // 根据腿长PD控制得到， 初值为上层机构重力
-    float Tp_set; // 根据状态反馈矩阵得到
+    float F_set;  //get through PD control based on leg length, with the initial value being the gravity of the upper structure
+    float Tp_set; //according to the state feedback matrix
 
-    Matrix<float, 2, 6> K;     // 反馈矩阵
-    Matrix<float, 6, 1> X, Xd; // 状态矩阵，[theta, theta_dot, x, x_dot, phi, phi_dot]
+    Matrix<float, 2, 6> K; //feedback matrix
+    Matrix<float, 6, 1> X, Xd; //state matrix, [theta, theta_dot, x, x_dot, phi, phi_dot]
     PID_Controller supportF_pid;
     PID_Controller supportFInAir_pid; // PID when in air
 

@@ -1,5 +1,5 @@
 /*
- * @Description: Leg内部函数定义
+ * @Description: Leg Variables Definition
  * @Version: 2.0
  * @Author: Dandelion
  * @Date: 2023-03-24 17:19:53
@@ -26,7 +26,7 @@ LegClass::LegClass()
     angle1 = PI / 3 * 2;
     angle4 = PI / 3;
     ForwardKinematics(angle1, angle4, 0);
-    L0.set = 0.260; // 初值
+    L0.set = 0.260; // Initial value
     L0.last = 0.260;
     K << -55.6021, -13.3377, -9.7707, -11.4781, 15.0562, 0.7386,
         19.9343, 5.5433, 4.2585, 4.9211, 138.1783, 4.1289;
@@ -36,7 +36,7 @@ LegClass::LegClass()
     supportFInAir_pid.update(1000, 20.0, 0.0, 0);
 }
 /**
- * @brief: 运动学逆解
+ * @brief: Inverse Kinematics
  * @author: Dandelion
  * @Date: 2023-03-31 23:50:02
  * @param {float} xc
@@ -58,24 +58,23 @@ void LegClass::InvKinematics(const float xc, const float yc)
     if (angle1 < 0)
         angle1 += 2 * PI;
 
-    // nije_5(&angle1, (void *)0, x, y, l1, l6, l3, l4, l5); //利用L1,L6计算c1;
+    // nije_5(&angle1, (void *)0, x, y, l1, l6, l3, l4, l5); //Calculate c1 using L1,L6
     m = l1 * cos(angle1);
     n = l1 * sin(angle1);
     b = 0;
     // x1 = l2 / l6 * ((x - m) * cos(b) - (y - n) * sin(b)) + m;
-    // y1 = l2 / l6 * ((x - m) * sin(b) + (y - n) * cos(b)) + n; //得到闭链五杆端点的坐标
+    // y1 = l2 / l6 * ((x - m) * sin(b) + (y - n) * cos(b)) + n; //Get the coordinates of the endpoint of the closed-chain five-bar linkage
     x1 = ((xc - m) * cos(b) - (yc - n) * sin(b)) + m;
-    y1 = ((xc - m) * sin(b) + (yc - n) * cos(b)) + n; // 得到闭链五杆端点的坐标
-
+    y1 = ((xc - m) * sin(b) + (yc - n) * cos(b)) + n; //Get the coordinates of the endpoint of the closed-chain five-bar linkage
     A = 2 * y1 * l4;
     B = 2 * l4 * (x1 - l5 / 2);
     // c = l3 * l3 + 2 * l5 * x1 - l4 * l4 - l5 * l5 - x1 * x1 - y1 * y1;
     C = l3 * l3 + l5 * x1 - l4 * l4 - l5 * l5 / 4 - x1 * x1 - y1 * y1;
     angle4 = 2 * atan((A - sqrt(A * A + B * B - C * C)) / (B - C));
-    // nije_5((void *)0, &angle2, x1, y1, l1, l2, l3, l4, l5);        //计算c4 ,
+    // nije_5((void *)0, &angle2, x1, y1, l1, l2, l3, l4, l5);        //calculate c4 ,
 }
 /**
- * @brief: 运动学正解
+ * @brief: Forward Kinematics
  * @author: Dandelion
  * @Date: 2023-03-24 19:50:04
  * @param {float} angle1
@@ -103,7 +102,7 @@ void LegClass::ForwardKinematics(const float angle1, const float angle4, const f
     yc = yb + l2 * sin(angle2);
 
     L0.now = sqrt(pow(xc, 2) + pow(yc, 2));
-    // 乘以pitch的旋转矩阵
+    //Multiply by the rotation matrix of pitch
     Matrix<float, 2, 2> matrix_R;
     Matrix<float, 2, 1> cor_XY;
     Matrix<float, 2, 1> cor_XY_then;
@@ -115,11 +114,11 @@ void LegClass::ForwardKinematics(const float angle1, const float angle4, const f
     angle0.now = atan(cor_XY_then(0, 0) / cor_XY_then(1, 0));
 }
 /**
- * @brief: VMC（虚拟力算法）
+ * @brief: VMC (Virtual Model Control)
  * @author: Dandelion
  * @Date: 2023-03-27 15:27:06
- * @param {float} F 沿杆方向的受力
- * @param {float} Tp 杆所受的力矩
+ * @param {float} F (Force along the direction of the rod)
+ * @param {float} Tp (The torque experienced by the rod)
  * @return {*}
  */
 Matrix<float, 2, 1> LegClass::VMC(const float F, const float Tp)

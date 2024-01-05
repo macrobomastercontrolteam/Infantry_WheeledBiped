@@ -189,59 +189,56 @@ void MyRobot::inv_pendulum_ctrl(LegClass *leg_sim, LegClass *leg_L, LegClass *le
                                 const DataStructure pitch,
                                 const float dt, float v_set)
 {
-    if (isJumpInTheAir)
-    {
-        leg_L->TWheel_set = wheelBrakeInAirL_pid.compute(0, 0, leg_L->dis.dot, 0, dt);
-        leg_R->TWheel_set = wheelBrakeInAirR_pid.compute(0, 0, leg_R->dis.dot, 0, dt);
+    // leg_L->TWheel_set = wheelBrakeInAirL_pid.compute(0, 0, leg_L->dis.dot, 0, dt);
+    // leg_R->TWheel_set = wheelBrakeInAirR_pid.compute(0, 0, leg_R->dis.dot, 0, dt);
 
-        // @TODO: predict best simLeg angle before landing based on initial velocity
-        float out_invPendulumInAir = invPendulumInAir_pid.compute(0, 0, leg_sim->angle0.now, leg_sim->angle0.dot, dt);
-        leg_L->Tp_set = -out_invPendulumInAir;
-        leg_R->Tp_set = -out_invPendulumInAir;
+    // // @TODO: predict best simLeg angle before landing based on initial velocity
+    // float out_invPendulumInAir = invPendulumInAir_pid.compute(0, 0, leg_sim->angle0.now, leg_sim->angle0.dot, dt);
+    // leg_L->Tp_set = -out_invPendulumInAir;
+    // leg_R->Tp_set = -out_invPendulumInAir;
+
+    Matrix<float, 2, 1> Matrix_u;
+
+    // Choose the K_coeff based upon if the robot is jump in the air
+    Matrix<float, 12, 4> K_coeff_now;
+    K_coeff_now = (isJumpInTheAir) ? K_coeff_inAir : K_coeff;
+
+    // Generating K matrix based on current leg lengths
+    for (size_t col = 0; col < 6; col++)
+    {
+        /* code */
+        for (size_t row = 0; row < 2; row++)
+        {
+            /* code */
+            int num = col * 2 + row;
+            leg_sim->K(row, col) = K_coeff_now(num, 0) * pow(leg_sim->L0.now, 3) +
+                                   K_coeff_now(num, 1) * pow(leg_sim->L0.now, 2) +
+                                   K_coeff_now(num, 2) * leg_sim->L0.now +
+                                   K_coeff_now(num, 3);
+        }
+    }
+    // Update status
+    leg_sim->dis.set += v_set * dt;
+    leg_sim->Xd << 0, 0, leg_sim->dis.set, 0, 0, 0;
+    leg_sim->X << leg_sim->angle0.now, leg_sim->angle0.dot, leg_sim->dis.now, leg_sim->dis.dot, pitch.now, pitch.dot;
+    Matrix_u = leg_sim->K * (leg_sim->Xd - leg_sim->X); // u = K(Xd-X);
+    leg_sim->TWheel_set = Matrix_u(0, 0);
+    leg_sim->Tp_set = Matrix_u(1, 0);
+
+    // output
+    if (jumpState == JUMP_LAUNCH)
+    {
+        // Maintain wheel speed during JUMP_LAUNCH, to avoid singularity in LQR when wheel leaves ground
+        leg_L->TWheel_set = 0;
+        leg_R->TWheel_set = 0;
     }
     else
     {
-        // 计算K矩阵数据，根据L0.now拟合得到
-        Matrix<float, 2, 1> Matrix_u;
-
-        // 根据当前杆长计算K矩阵的各项值
-        for (size_t col = 0; col < 6; col++)
-        {
-            /* code */
-            for (size_t row = 0; row < 2; row++)
-            {
-                /* code */
-                int num = col * 2 + row;
-                leg_sim->K(row, col) = K_coeff(num, 0) * pow(leg_sim->L0.now, 3) +
-                                       K_coeff(num, 1) * pow(leg_sim->L0.now, 2) +
-                                       K_coeff(num, 2) * leg_sim->L0.now +
-                                       K_coeff(num, 3);
-            }
-        }
-
-        // 状态更新
-        leg_sim->dis.set += v_set * dt;
-        leg_sim->Xd << 0, 0, leg_sim->dis.set, 0, 0, 0;
-        leg_sim->X << leg_sim->angle0.now, leg_sim->angle0.dot, leg_sim->dis.now, leg_sim->dis.dot, pitch.now, pitch.dot;
-        Matrix_u = leg_sim->K * (leg_sim->Xd - leg_sim->X); // u = K(Xd-X);
-        leg_sim->TWheel_set = Matrix_u(0, 0);
-        leg_sim->Tp_set = Matrix_u(1, 0);
-
-        // output
-        if (jumpState == JUMP_LAUNCH)
-        {
-            // Maintain wheel speed during JUMP_LAUNCH, to avoid singularity in LQR when wheel leaves ground
-            leg_L->TWheel_set = 0;
-            leg_R->TWheel_set = 0;
-        }
-        else
-        {
-            leg_L->TWheel_set = leg_sim->TWheel_set / 2.0;
-            leg_R->TWheel_set = leg_sim->TWheel_set / 2.0;
-        }
-        leg_L->Tp_set = -leg_sim->Tp_set / 2.0;
-        leg_R->Tp_set = -leg_sim->Tp_set / 2.0;
+        leg_L->TWheel_set = leg_sim->TWheel_set / 2.0;
+        leg_R->TWheel_set = leg_sim->TWheel_set / 2.0;
     }
+    leg_L->Tp_set = -leg_sim->Tp_set / 2.0;
+    leg_R->Tp_set = -leg_sim->Tp_set / 2.0;
 }
 
 void MyRobot::torque_ctrl(LegClass *leg_sim, LegClass *leg_L, LegClass *leg_R,

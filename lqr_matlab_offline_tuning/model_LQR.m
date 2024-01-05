@@ -1,5 +1,11 @@
 function [K, L_sum] = model_LQR(xc, yc, xp, yp, Ipin)
 
+% xc=-5.6843e-14;
+% yc=288.1721;
+% xp=-2.6382e-14;
+% yp=114.6396;
+% Ipin=0.0299;
+
 syms theta(t) x(t) phi(t) T(t) Tp(t) N(t) P(t) Nm(t) Pm(t)
 syms theta_dot x_dot phi_dot x_dot_dot theta_dot_dot phi_dot_dot
 
@@ -83,10 +89,16 @@ end
 C = eye(6);
 D = zeros(6,2);
 v_Q = [100 100 100 10 5000 1];
+% v_Q = [500 500 1e-8 1e-8 1e-8 1e-8]; % parameters for in-air state
 Q = diag(v_Q);
 v_R = [1 0.25];
+% v_R = [1e8 1]; % parameters for in-air state
 R = diag(v_R);
 sys = ss(A, B, C, D);
 K = lqr(sys, Q, R)%得到反馈增益矩阵
+
+% Test out the closed-loop system
+% closed_sys = ss(A-B*K,B,C,D);
+% step(closed_sys);
 
 end

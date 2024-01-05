@@ -22,12 +22,13 @@ Il4 = Il1 * 2;
 
 num_data = 20;
 L_lib = [];
-K_lib = cell(2,6);%创造一个空的2*6的cell数组
-for i = 1:2
-   for j = 1:6
-       K_lib{i,j} = rand(1, num_data);% 给每个元素赋值为一个大小为 21 的随机数数组
-   end
-end
+% empty cell
+K_lib = cell(2*6,num_data);
+% for i = 1:2
+%    for j = 1:6
+%        K_lib{i,j} = rand(1, num_data);% 给每个元素赋值为一个大小为 21 的随机数数组
+%    end
+% end
 for i = 1 : 1 : num_data
     theta = 59 + i;
     syms theta1 theta2 theta3 theta4 theta5 pitch;
@@ -52,16 +53,23 @@ for i = 1 : 1 : num_data
     eqn1 = xc == xd + l3*cos(theta3);
     eqn2 = yc == yd + l3*sin(theta3);
     
-    sol = solve([eqn1, eqn2], [theta2, theta3]);
-    
+    %五连杆正解得到足端点（数值结果）
+    sol = solve([eqn1, eqn2], [theta2, theta3]);    
     theta2 = double(simplify(sol.theta2));
     theta3 = double(simplify(sol.theta3));
-    %五连杆正解得到足端点
-    [xc, yc, u2, u3] = ForwardKinematics(theta1, theta4, 0)
+    %五连杆正解得到足端点（手算结果）
+    [xc, yc, theta2_fk, theta3_fk] = ForwardKinematics(theta1, theta4, 0);
+
     %简化为单杆的质心坐标和转动惯量
     [xp, yp, Ip] = Simplify_model(pitch, theta1, theta4, xa, ya, xb, yb, xc, yc, xd, yd, xe, ye);
     %再接下来是根据上面的进行LQR线性化
     [K, L] = model_LQR(xc, yc, xp, yp, Ip);
+
+    % For K_InAir, set all elements = 0 except K(2,1), K(2,2)
+    % K_InAir = zeros(size(K));
+    % K_InAir(2,1) = K(2,1);
+    % K_InAir(2,2) = K(2,2);
+    % K = K_InAir;
     
     for j = 1 : 1 : 12
         K_lib{j, i} = K(j);

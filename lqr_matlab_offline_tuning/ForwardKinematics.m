@@ -6,15 +6,20 @@ xb = l1 * cos(u1) - l5/2;
 yb = l1 * sin(u1);
 xd = l5/2 + l4 * cos(u4);
 yd = l4 * sin(u4);
+
+% Manual solution
 lbd = sqrt((xd - xb).^2 + (yd - yb).^2);
 A0 = 2 * l2 * (xd - xb);
 B0 = 2 * l2 * (yd - yb);
 C0 = l2.^2 + lbd.^2 - l3.^2;
 D0 = l3.^2 + lbd.^2 - l2.^2;
-u2 = 2 * atan((B0 + sqrt(A0.^2 + B0.^2 - C0.^2))/(A0 + C0));%rad\
+
+u2 = 2 * atan((B0 + sqrt(A0.^2 + B0.^2 - C0.^2))/(A0 + C0)); %rad
 u3 = pi - 2 * atan((B0 + sqrt(A0.^2 + B0.^2 - D0.^2))/(A0 + D0));
+
 xc = xb + l2 * cos(u2);
 yc = yb + l2 * sin(u2);
+
 R = [cos(pitch), -sin(pitch);
     sin(pitch), cos(pitch)];
 v = R*[xc;yc];

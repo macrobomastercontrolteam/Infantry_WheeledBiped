@@ -23,7 +23,7 @@ yc = yb + l2 * sin(u2);
 R = [cos(pitch), -sin(pitch);
     sin(pitch), cos(pitch)];
 v = R*[xc;yc];
-x = v(1)
-y = v(2)
+x = v(1);
+y = v(2);
 
 end

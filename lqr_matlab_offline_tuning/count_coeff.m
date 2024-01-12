@@ -3,22 +3,38 @@
 clc
 clear
 format short
+
+global fIsRmCapOriModel
+fIsRmCapOriModel = 1; % 0: original model, 1: capstone/RM model
+if fIsRmCapOriModel == 0
+    l1_adj = 1;
+    l2_adj = 1;
+    l3_adj = 1;
+    l4_adj = 1;
+    l5_adj = 1;
+elseif fIsRmCapOriModel == 1
+    l1_adj = 150/180;
+    l2_adj = 250/200;
+    l3_adj = l2_adj;
+    l4_adj = l1_adj;
+    l5_adj = 108/120;
+end
 global l1 l2 l3 l4 l5;
-l1 = 180;%单位为mm
-l2 = 200;
-l3 = 200;
-l4 = 180;
-l5 = 120;
+l1 = 180 * l1_adj;%单位为mm
+l2 = 200 * l2_adj;
+l3 = l2;
+l4 = l1;
+l5 = 120 * l5_adj;
 global ml1 ml2 ml3 ml4;
-ml1 = 0.28*2;%单位是kg
-ml2 = 0.124*2;
-ml3 = 0.124*2;
-ml4 = 0.28*2;
+ml1 = 0.28 * 2 * l1_adj;%单位是kg
+ml2 = 0.124 * 2 * l2_adj;
+ml3 = ml2;
+ml4 = ml1;
 global Il1 Il2 Il3 Il4;
-Il1 = 0.000858771 * 2;
-Il2 = 0.000469931 * 2;
-Il3 = Il2 * 2;
-Il4 = Il1 * 2;
+Il1 = 0.000858771 * 2 * (l1_adj^2);
+Il2 = 0.000469931 * 2 * (l2_adj^2);
+Il3 = Il2;
+Il4 = Il1;
 
 num_data = 20;
 L_lib = [];
@@ -64,6 +80,7 @@ for i = 1 : 1 : num_data
     [xp, yp, Ip] = Simplify_model(pitch, theta1, theta4, xa, ya, xb, yb, xc, yc, xd, yd, xe, ye);
     %再接下来是根据上面的进行LQR线性化
     [K, L] = model_LQR(xc, yc, xp, yp, Ip);
+    disp(K);
 
     % For K_InAir, set all elements = 0 except K(2,1), K(2,2)
     % K_InAir = zeros(size(K));

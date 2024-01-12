@@ -47,7 +47,7 @@
 ###
 ### ---- Linked libraries ----
 ### if your program needs additional libraries:
- INCLUDE = -I D:/happy/Documents/eigen-3.4.0/Eigen
+#  INCLUDE += 
 ### LIBRARIES = -L"/path/to/my/library" -lmy_library -lmy_other_library
 ###
 ### ---- Linking options ----
@@ -69,5 +69,8 @@
 space :=
 space +=
 #WEBOTS_HOME_PATH=$(subst $(space),\ ,$(strip $(subst \,/,$(WEBOTS_HOME))))
-CXX_SOURCES = $(wildcard *.cpp)
+# VERBOSE = 1
+# CXX_SOURCES = $(wildcard *.cpp)
+C_SOURCES = $(wildcard *.c)
 include C:/Users/happy/AppData/Local/Programs/Webots/resources/Makefile.include
+# include C:/Program\ Files/Webots/resources/Makefile.include

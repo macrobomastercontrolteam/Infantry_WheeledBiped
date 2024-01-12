@@ -4,7 +4,11 @@
       "name": "windows-gcc-x86",
       "includePath": [
         "${workspaceFolder}/**",
-        "C:/Program Files/Webots"
+        "C:/Program Files/Webots/include/controller/c"        
+        // "C:/Program Files/Webots/include/controller/cpp",        
+      ],
+      "libPath": [
+        "C:/Program Files/Webots/lib/controller",
       ],
       "defines": [
         "_DEBUG",

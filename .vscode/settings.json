@@ -115,6 +115,19 @@
     "thread": "cpp",
     "cinttypes": "cpp",
     "typeinfo": "cpp",
-    "valarray": "cpp"
+    "valarray": "cpp",
+    "compare": "c",
+    "alignedvector3": "cpp",
+    "user_lib.h": "c",
+    "span": "c",
+    "string.h": "c",
+    "arm_math.h": "c",
+    "leg.h": "c",
+    "keyboard.h": "c",
+    "biped.h": "c",
+    "math.h": "c",
+    "pid.h": "c",
+    "inertial_unit.h": "c",
+    "gyro.h": "c"
   }
 }

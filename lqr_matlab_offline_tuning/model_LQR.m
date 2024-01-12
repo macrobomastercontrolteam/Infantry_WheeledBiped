@@ -2,9 +2,13 @@ function [K, L_sum] = model_LQR(xc, yc, xp, yp, Ipin)
 
 % xc=-5.6843e-14;
 % yc=288.1721;
+disp(yc)
 % xp=-2.6382e-14;
 % yp=114.6396;
 % Ipin=0.0299;
+
+global fIsRmCapOriModel;
+global ml1 ml2 ml3 ml4;
 
 syms theta(t) x(t) phi(t) T(t) Tp(t) N(t) P(t) Nm(t) Pm(t)
 syms theta_dot x_dot phi_dot x_dot_dot theta_dot_dot phi_dot_dot
@@ -13,23 +17,33 @@ syms theta_dot x_dot phi_dot x_dot_dot theta_dot_dot phi_dot_dot
 L_sum = sqrt(xc ^ 2 + yc ^ 2);
 L_now = sqrt((xc - xp)^2 + (yc - yp)^2);
 Lm_now = L_sum - L_now;
-R = 0.05;
 L = L_now * 0.001;
 Lm = Lm_now * 0.001;
+
+if fIsRmCapOriModel == 1
+    R = 0.0675; % drive wheel radius
+    mw = 1 * 2; % drive wheel mass
+    Iw = 0.0003271 * 2; % rotor inertia
+    M = 5; % body mass
+    Im = 0.78714333 * 0.062665311 * 5/12;
+else
+    R = 0.050; % drive wheel radius
+    mw = 3 * 2; % drive wheel mass
+    Iw = 0.00375805 * 2;
+    M = 12; % body mass
+    Im = 0.78714333 * 0.062665311;
+end
+
 l = 0;
-mw = 3 * 2;
-mp = 0.808 * 2;
-M = 12;
-Iw = 0.00375805 * 2;
+mp = ml1 + ml2 + ml3 + ml4; % pendulum mass
 Ip = Ipin;
-Im = 0.78714333 * 0.062665311;
 g = 9.81;
 % subs(A_final, ...
 %     [R, L, Lm, l, mw, mp, M, Iw, Ip, Im], ...
-%     [0.05, L_now, Lm_now, 0,  0.406, 0.808, 15.245, 0.000508589, Ipin, 0.062665311]);%R=50mm;
+%     [0.0675, L_now, Lm_now, 0,  0.406, 0.808, 15.245, 0.000508589, Ipin, 0.062665311]);%R=50mm;
 % subs(B_final, ...
 %     [R, L, Lm, l, mw, mp, M, Iw, Ip, Im], ...
-%     [0.05, L_now, Lm_now, 0,  0.406, 0.808, 15.245, 0.000508589, Ipin, 0.062665311]);%R=50mm;
+%     [0.0675, L_now, Lm_now, 0,  0.406, 0.808, 15.245, 0.000508589, Ipin, 0.062665311]);%R=50mm;
 
 %列出替代方程
 Nm(t) = M*diff(diff(x+(L+Lm)*sin(theta)-l*sin(phi),t) , t);
@@ -76,9 +90,9 @@ A = jacobian(X_dot, X);
 B = jacobian(X_dot, u);
 A = subs(A, [theta(t), theta_dot, x_dot, phi(t), phi_dot, T(t), Tp(t)], zeros(1,7));%代入平衡点处的值, X = [0 0 x 0 0 0] u = [0 0]
 B = subs(B, [theta(t), theta_dot, x_dot, phi(t), phi_dot, T(t), Tp(t)], zeros(1,7));
-A = double(A)
-B = double(B)
-size(A,1)
+A = double(A);
+B = double(B);
+size(A,1);
 %算可控矩阵的秩，如果等于A的阶数，则系统可控
 if(rank(ctrb(A, B)) == size(A, 1))
     disp('系统可控')
@@ -89,13 +103,13 @@ end
 C = eye(6);
 D = zeros(6,2);
 v_Q = [100 100 100 10 5000 1];
-% v_Q = [500 500 1e-8 1e-8 1e-8 1e-8]; % parameters for in-air state
+% v_Q = [100 100 100 10 1e-8 1e-8]; % parameters for in-air state
 Q = diag(v_Q);
 v_R = [1 0.25];
 % v_R = [1e8 1]; % parameters for in-air state
 R = diag(v_R);
 sys = ss(A, B, C, D);
-K = lqr(sys, Q, R)%得到反馈增益矩阵
+K = lqr(sys, Q, R); %得到反馈增益矩阵
 
 % Test out the closed-loop system
 % closed_sys = ss(A-B*K,B,C,D);

@@ -1,4 +1,5 @@
 data = load('data2.dat');
+
 t = data(:,1);
 TorqueL = data(:,2);
 TorqueR = data(:,3);
@@ -36,6 +37,9 @@ RF_set = data(:,30);
 
 WheelSpeedL = data(:,31);
 WheelSpeedR = data(:,32);
+
+SupportF_L = data(:,33);
+SupportF_R = data(:,34);
 
 figure;
 
@@ -106,10 +110,10 @@ grid on;
 % grid on;
 
 subplot(3,3,5);
-plot(t, theta0_L, t, theta0_R);
-legend("theta0_L", "theta0_R",'Location','southwest');
+plot(t, theta0_L, t, theta0_R, t, pitch);
+legend("theta0_L", "theta0_R", "pitch",'Location','southwest');
 xlabel("t(s)");
-ylabel("theta0(rad)");
+ylabel("angle(rad)");
 grid on;
 
 subplot(3,3,6);
@@ -126,11 +130,18 @@ grid on;
 % ylabel("pitch(rad)");
 % grid on;
 
+% subplot(3,3,7);
+% plot(t, roll, t, roll_set);
+% legend("roll", "roll_{set}",'Location','southwest');
+% xlabel("t(s)");
+% ylabel("roll(rad)");
+% grid on;
+
 subplot(3,3,7);
-plot(t, roll, t, roll_set);
-legend("roll", "roll_{set}",'Location','southwest');
+plot(t, SupportF_L, t, SupportF_R);
+legend("SupportF_L", "SupportF_R",'Location','southwest');
 xlabel("t(s)");
-ylabel("roll(rad)");
+ylabel("Force(N)");
 grid on;
 
 subplot(3,3,8);

@@ -17,6 +17,12 @@ typedef enum
 	JUMP_SHRINK = 4,
 } jumpState_e;
 
+typedef enum
+{
+	BRAKE_IDLE = 0,
+	BRAKE_ENABLE = 1,
+} brakeState_e;
+
 // indices of biped.motor_measure
 typedef enum
 {
@@ -70,14 +76,17 @@ typedef struct
 
 	// fp32 acc_up_max, acc_down_max, acc_now;
 	fp32 balance_angle;
-	fp32 yaw_raw;
 	// fp32 yaw_dot_last;
 	variable_status_t velocity, yaw, pitch, roll;
 	fp32 accel_x, accel_y, accel_z;
 
 	LegClass_t leg_L, leg_R, leg_simplified;
 	uint8_t isJumpInTheAir;
+	uint8_t fBipedEnable;
+	fp32 HipTorque_MaxLimit;
+	fp32 DriveTorque_MaxLimit;
 	jumpState_e jumpState;
+	brakeState_e brakeState;
 } biped_t;
 
 extern biped_t biped;
@@ -86,6 +95,7 @@ void biped_init(void);
 void biped_task(void);
 void inv_pendulum_ctrl(void);
 void torque_ctrl(void);
+uint8_t biped_jumpStart(void);
 fp32 limitVelocity(fp32 speed_set, fp32 L0);
 
 #endif /* _BIPED_H */

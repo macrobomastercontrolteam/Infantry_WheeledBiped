@@ -23,9 +23,9 @@
 #include <math.h>
 #include <stdio.h>
 
-int time_step_ms;   // millisecond
-fp32 time_s;        // second
-fp32 sampling_time; // the time_s to start detection, in seconds
+const int time_step_ms = CHASSIS_CONTROL_TIME_MS; // millisecond
+fp32 time_s;                                      // second
+fp32 sampling_time;                               // the time_s to start detection, in seconds
 int starttime;
 
 WbDeviceTag camera;
@@ -64,21 +64,21 @@ int main(int argc, char **argv)
 		time_s = wb_robot_get_time();
 		biped.time_ms = time_s * 1000.0f;
 		MyRobot_run();
-		if (time_s > 0)
+		if (time_s > 0.75)
 		{
+			// temperory debug
 			fp32 SupportF_L[2][1];
 			fp32 SupportF_R[2][1];
-			LegClass_t_Inv_VMC(&biped.leg_L, -biped.leg_L.TL_now, biped.leg_L.TR_now, SupportF_L);
-			LegClass_t_Inv_VMC(&biped.leg_R, -biped.leg_R.TL_now, biped.leg_R.TR_now, SupportF_R);
+			LegClass_t_Inv_VMC(&biped.leg_L, -biped.motor_measure[CHASSIS_ID_HIP_BL].torque, biped.motor_measure[CHASSIS_ID_HIP_FL].torque, SupportF_L);
+			LegClass_t_Inv_VMC(&biped.leg_R, -biped.motor_measure[CHASSIS_ID_HIP_BR].torque, biped.motor_measure[CHASSIS_ID_HIP_FR].torque, SupportF_R);
 			fp32 SupportF_L_temp = SupportF_L[0][0];
 			fp32 SupportF_R_temp = SupportF_R[0][0];
 
-			fprintf(fptr, "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f\n",
+			fprintf(fptr, "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f %f %f %f %f %f\n",
 			        time_s,
 			        biped.leg_L.TWheel_set,
 			        biped.leg_R.TWheel_set,
-			        biped.velocity.now,
-			        biped.velocity.set,
+			        biped.leg_simplified.dis.dot, 
 			        biped.leg_simplified.angle0.now,
 			        biped.leg_simplified.angle0.dot,
 			        biped.pitch.now,
@@ -86,17 +86,16 @@ int main(int argc, char **argv)
 			        biped.roll.now,
 			        biped.roll.set,
 			        biped.yaw.dot,
-			        biped.yaw.set_dot,
 			        biped.leg_L.L0.now,
 			        biped.leg_R.L0.now,
 			        biped.leg_L.angle0.now,
 			        biped.leg_R.angle0.now,
 			        biped.leg_L.L0.set,
 			        biped.leg_R.L0.set,
-			        biped.leg_L.TL_now,
-			        biped.leg_R.TL_now,
-			        biped.leg_L.TR_now,
-			        biped.leg_R.TR_now,
+			        biped.motor_measure[CHASSIS_ID_HIP_BL].torque,
+			        biped.motor_measure[CHASSIS_ID_HIP_BR].torque,
+			        biped.motor_measure[CHASSIS_ID_HIP_FL].torque,
+			        biped.motor_measure[CHASSIS_ID_HIP_FR].torque,
 			        biped.leg_L.TL_set,
 			        biped.leg_R.TL_set,
 			        biped.leg_L.TR_set,
@@ -107,7 +106,12 @@ int main(int argc, char **argv)
 			        biped.leg_L.dis.dot,
 			        biped.leg_R.dis.dot,
 			        SupportF_L_temp,
-			        SupportF_R_temp);
+			        SupportF_R_temp,
+			        biped.leg_L.dis.now,
+			        biped.leg_R.dis.now,
+			        biped.leg_L.Tp_set,
+			        biped.leg_R.Tp_set,
+			        biped.leg_simplified.dis.set);
 		}
 	}
 
@@ -119,9 +123,6 @@ int main(int argc, char **argv)
 void MyRobot_init(void)
 {
 	/* Webots settings */
-	time_step_ms = wb_robot_get_basic_time_step();
-	biped.time_step_s = time_step_ms / 1000.0f;
-
 	wb_keyboard_enable(time_step_ms);
 
 	camera = wb_robot_get_device("camera");
@@ -194,10 +195,19 @@ void MyRobot_init(void)
 
 void command_motor(void)
 {
+	if ((biped.leg_L.TL_set != biped.leg_L.TL_set) || (biped.leg_L.TR_set != biped.leg_L.TR_set) || (biped.leg_R.TL_set != biped.leg_R.TL_set) || (biped.leg_R.TR_set != biped.leg_R.TR_set))
+	{
+		printf("NaN detected in command_motor\n");
+	}
+
 	wb_motor_set_torque(BL_legmotor, biped.leg_L.TL_set);
 	wb_motor_set_torque(FL_legmotor, biped.leg_L.TR_set);
 	wb_motor_set_torque(BR_legmotor, biped.leg_R.TL_set);
 	wb_motor_set_torque(FR_legmotor, biped.leg_R.TR_set);
+	// wb_motor_set_position(BL_legmotor, -PI / 3);
+	// wb_motor_set_position(FL_legmotor, -PI / 3);
+	// wb_motor_set_position(BR_legmotor, -PI / 3);
+	// wb_motor_set_position(FR_legmotor, -PI / 3);
 
 	wb_motor_set_torque(L_Wheelmotor, biped.leg_L.TWheel_set);
 	wb_motor_set_torque(R_Wheelmotor, biped.leg_R.TWheel_set);
@@ -206,23 +216,24 @@ void command_motor(void)
 void MyRobot_run(void)
 {
 	const double *imu_rpy_values = wb_inertial_unit_get_roll_pitch_yaw(imu);
-	const double *gps_values = wb_gps_get_values(gps);
+	const double *gyro_values = wb_gyro_get_values(gyro);
 	const double *accel_values = wb_accelerometer_get_values(accel);
 
 	// fp32 robot_x = gps->getValues()[0];
-	biped.velocity.now = wb_gps_get_speed(gps);
+	// biped.velocity.now = wb_gps_get_speed(gps);
 	// Roll Pitch Yaw angles are assigned in an inconventional order for IMU, where XYZ corresponds to RYP
 	biped.pitch.now = imu_rpy_values[1];
-	biped.pitch.dot = gps_values[2];
+	// biped.pitch.dot = first_order_filter(gyro_values[2], biped.pitch.dot, 0.9f);
+	biped.pitch.dot = gyro_values[2];
 	biped.roll.now = imu_rpy_values[0];
-	biped.roll.dot = gps_values[0];
-	biped.yaw_raw = imu_rpy_values[2];
-	biped.yaw.dot = gps_values[1];
+	biped.roll.dot = gyro_values[0];
+	biped.yaw.now = imu_rpy_values[2];
+	biped.yaw.dot = gyro_values[1];
 
 	biped.accel_x = accel_values[0];
 	biped.accel_y = accel_values[1];
 	biped.accel_z = accel_values[2];
-	// remove gravity
+	// @TODO: remove gravity
 
 	biped.motor_measure[CHASSIS_ID_DRIVE_LEFT].multi_position = wb_position_sensor_get_value(encoder_wheelL);
 	biped.motor_measure[CHASSIS_ID_DRIVE_RIGHT].multi_position = wb_position_sensor_get_value(encoder_wheelR);
@@ -246,27 +257,84 @@ void MyRobot_run(void)
 	{
 		switch (key)
 		{
+			case 'X':
+			{
+				// disable robot control
+				biped.fBipedEnable = 0;
+				biped.isJumpInTheAir = 0;
+				biped.jumpState = JUMP_IDLE;
+
+				biped.HipTorque_MaxLimit = 0.0f;
+				biped.DriveTorque_MaxLimit = 0.0f;
+				// biped.leg_L.fResetMultiAngleOffset = 1;
+				// biped.leg_R.fResetMultiAngleOffset = 1;
+				biped.leg_simplified.dis.now = 0;
+				biped.leg_simplified.dis.set = biped.leg_simplified.dis.now;
+				break;
+			}
+			case 'C':
+			{
+				// enable robot control
+				biped.fBipedEnable = 1;
+				biped.isJumpInTheAir = 0;
+				biped.jumpState = JUMP_IDLE;
+
+				biped.roll.last = biped.roll.now;
+
+				biped.yaw.set = biped.yaw.now;
+				biped.yaw.last = biped.yaw.now;
+
+				biped.pitch.set = 0.0f;
+				// @TODO: biped.balance_angle
+				biped.pitch.last = biped.pitch.now;
+
+				// biped.velocity.set = 0;
+				// biped.velocity.last = biped.velocity.now;
+
+				biped.leg_L.dis.now = 0;
+				biped.leg_R.dis.now = 0;
+				biped.leg_simplified.dis.now = 0;
+				biped.leg_simplified.dis.set = biped.leg_simplified.dis.now;
+
+				biped.leg_L.angle0.last = biped.leg_L.angle0.now;
+				biped.leg_R.angle0.last = biped.leg_R.angle0.now;
+
+				biped.leg_L.L0.set = 0.25f;
+				biped.leg_R.L0.set = 0.25f;
+				biped.leg_L.L0.last = biped.leg_L.L0.now;
+				biped.leg_R.L0.last = biped.leg_R.L0.now;
+
+				biped.leg_L.dis.last = biped.leg_L.dis.now;
+				biped.leg_R.dis.last = biped.leg_R.dis.now;
+
+				// biped.leg_L.fResetMultiAngleOffset = 1;
+				// biped.leg_R.fResetMultiAngleOffset = 1;
+
+				biped.HipTorque_MaxLimit = HIP_TORQUE_MAX;
+				biped.DriveTorque_MaxLimit = DRIVE_TORQUE_MAX;
+				break;
+			}
 			case WB_KEYBOARD_UP:
-				biped.velocity.set += 0.02f;
+				biped.leg_simplified.dis.set += 0.02f;
 				break;
 			case WB_KEYBOARD_DOWN:
-				biped.velocity.set -= 0.02f;
+				biped.leg_simplified.dis.set -= 0.02f;
 				break;
 			case WB_KEYBOARD_RIGHT:
-				if (ABS(biped.velocity.set) > 0.1)
-					biped.yaw.set_dot -= 0.01f;
+				if (ABS(biped.leg_simplified.dis.dot) > 0.1)
+					biped.yaw.set -= 0.01f;
 				else
-					biped.yaw.set_dot -= 0.02f;
+					biped.yaw.set -= 0.02f;
 				break;
 			case WB_KEYBOARD_LEFT:
-				if (ABS(biped.velocity.set) > 0.1)
-					biped.yaw.set_dot += 0.01f;
+				if (ABS(biped.leg_simplified.dis.dot) > 0.1)
+					biped.yaw.set += 0.01f;
 				else
-					biped.yaw.set_dot += 0.02f;
+					biped.yaw.set += 0.02f;
 				break;
 			case WB_KEYBOARD_END:
-				biped.velocity.set = 0;
-				biped.yaw.set_dot = 0;
+				biped.leg_simplified.dis.set = biped.leg_simplified.dis.now;
+				biped.yaw.set = 0;
 				break;
 			case 'W':
 				biped.leg_L.L0.set += 0.0002f;
@@ -287,10 +355,7 @@ void MyRobot_run(void)
 				sampling_time = time_s;
 				break;
 			case 'J': // 'J' key to trigger the jump
-				if ((biped.jumpState == JUMP_IDLE) && (biped.isJumpInTheAir == 0))
-				{
-					biped.jumpState = JUMP_CHARGE_INIT;
-				}
+				biped_jumpStart();
 				break;
 			case ' ':
 				if (last_key != key)
@@ -300,33 +365,6 @@ void MyRobot_run(void)
 		last_key = key;
 		key = wb_keyboard_get_key();
 	}
-
-	/*测试用的，追踪一个持续4s的速度期望*/
-	// if (sampling_flag == 1)
-	// {
-	//     if (time_s - sampling_time < 1)
-	//     {
-	//         velocity.set = 0;
-	//     }
-	//     else if (time_s - sampling_time < 5)
-	//     {
-	//         // velocity.set += acc_up_max * time_step_ms * 0.001;
-	//         velocity.set = 1.0;
-	//     }
-	//     // else if (time_s < 6)
-	//     // {
-	//     //     velocity.set = 3;
-	//     // }
-	//     // else if (time_s < 9)
-	//     // {
-	//     //     velocity.set -= acc_down_max * time_step_ms * 0.001;
-	//     // }
-	//     else
-	//     {
-	//         velocity.set = 0;
-	//         sampling_flag = 0;
-	//     }
-	// }
 
 	biped_task();
 	command_motor();

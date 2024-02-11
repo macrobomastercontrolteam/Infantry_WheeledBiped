@@ -72,5 +72,5 @@ space +=
 # VERBOSE = 1
 # CXX_SOURCES = $(wildcard *.cpp)
 C_SOURCES = $(wildcard *.c)
-include C:/Users/happy/AppData/Local/Programs/Webots/resources/Makefile.include
-# include C:/Program\ Files/Webots/resources/Makefile.include
+# include C:/Users/happy/AppData/Local/Programs/Webots/resources/Makefile.include
+include C:/Program\ Files/Webots/resources/Makefile.include

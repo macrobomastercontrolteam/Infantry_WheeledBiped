@@ -5,7 +5,7 @@ clear
 format short
 
 global fIsRmCapOriModel
-fIsRmCapOriModel = 1; % 0: original model, 1: capstone/RM model
+fIsRmCapOriModel = 0; % 0: original model, 1: capstone/RM model
 if fIsRmCapOriModel == 0
     l1_adj = 1;
     l2_adj = 1;

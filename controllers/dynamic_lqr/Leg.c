@@ -11,20 +11,25 @@
 #include "string.h"
 #include "user_lib.h"
 
+// Unit mm
 #if (MODEL_ORIG_RM_CAP == 0)
-const fp32 LegL0_Min = 0.2f;
-const fp32 LegL0_Max = 0.35f;
+const fp32 legLength1 = 0.180f;
+const fp32 legLength2 = 0.200f;
+const fp32 legLength3 = 0.200f;
+const fp32 legLength4 = 0.180f;
+const fp32 legLength5 = 0.120f;
 #elif ((MODEL_ORIG_RM_CAP == 1) || (MODEL_ORIG_RM_CAP == 2))
-const fp32 LegL0_Min = 0.15f;
-const fp32 LegL0_Max = 0.35f;
+// Unit mm
+const fp32 legLength1 = 0.150f;
+const fp32 legLength2 = 0.250f;
+const fp32 legLength3 = 0.250f;
+const fp32 legLength4 = 0.150f;
+const fp32 legLength5 = 0.108f;
 #endif
-const fp32 LegL0_Mid = (LegL0_Min + LegL0_Max) / 2.0f;
-const fp32 LegL0_Min_Threshold = LegL0_Min + 0.04f;
-const fp32 LegL0_Max_Threshold = LegL0_Max - 0.04f;
 
 void LegClass_t_Init(LegClass_t *leg)
 {
-	leg->F_set = -UNLOADED_ROBOT_HALF_WEIGHT;
+	leg->F_set = 0;
 	leg->dis.now = 0;
 	leg->dis.last = 0;
 	leg->dis.dot = 0;
@@ -55,14 +60,15 @@ void LegClass_t_Init(LegClass_t *leg)
 	memcpy(leg->K, K_init, sizeof(leg->X));
 
 	// avoid saturation here to maintain scale in motor torques
+	// Kd must be big to maintain height!
 	const static fp32 supportF_pid_param[3] = {1000, 20, 500};
-	PID_init(&(leg->supportF_pid), PID_POSITION, supportF_pid_param, 99999, 10, &raw_err_handler);
+	PID_init(&(leg->supportF_pid), PID_POSITION, supportF_pid_param, 99999, 10, 0.9f, &filter_err_handler);
 
-	const fp32 supportFInAir_pid_param[3] = {1000, 20, 10};
-	PID_init(&(leg->supportFInAir_pid), PID_POSITION, supportFInAir_pid_param, 99999, 10, &raw_err_handler);
+	const fp32 supportFInAir_pid_param[3] = {500, 10, 250};
+	PID_init(&(leg->supportFInAir_pid), PID_POSITION, supportFInAir_pid_param, 99999, 10, 0.9f, &filter_err_handler);
 
 // 	const fp32 supportFCharge_pid_param[3] = {1000, 20, 500};
-// 	PID_init(&(leg->supportFCharge_pid), PID_POSITION, supportFCharge_pid_param, 99999, 10, &raw_err_handler);
+// 	PID_init(&(leg->supportFCharge_pid), PID_POSITION, supportFCharge_pid_param, 99999, 10, 0.9f, &filter_err_handler);
 }
 
 void LegClass_t_InvKinematics(LegClass_t *leg, const fp32 xc, const fp32 yc)

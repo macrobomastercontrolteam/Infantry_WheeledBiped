@@ -51,7 +51,7 @@ void LimitMax(fp32 *num, fp32 Limit)
   * @param[in]      max_iout: pid最大积分输出
   * @retval         none
   */
-void PID_init(pid_type_def *pid, uint8_t mode, const fp32 PID[3], fp32 max_out, fp32 max_iout, fp32 (*err_handler)(fp32 set, fp32 ref))
+void PID_init(pid_type_def *pid, uint8_t mode, const fp32 PID[3], fp32 max_out, fp32 max_iout, fp32 filter_coeff, fp32 (*err_handler)(fp32 set, fp32 ref, fp32 err[3], fp32 filter_coeff))
 {
     if (pid == NULL || PID == NULL)
     {
@@ -66,6 +66,7 @@ void PID_init(pid_type_def *pid, uint8_t mode, const fp32 PID[3], fp32 max_out, 
     pid->Dbuf[0] = pid->Dbuf[1] = pid->Dbuf[2] = 0.0f;
     pid->error[0] = pid->error[1] = pid->error[2] = pid->Pout = pid->Iout = pid->Dout = pid->out = 0.0f;
     pid->err_handler = err_handler;
+    pid->filter_coeff = filter_coeff;
 }
 
 /**
@@ -93,29 +94,39 @@ fp32 PID_calc(pid_type_def *pid, fp32 ref, fp32 set, fp32 dt)
     pid->error[1] = pid->error[0];
     pid->set = set;
     pid->fdb = ref;
-    pid->error[0] = pid->err_handler(set, ref);
+    pid->error[0] = pid->err_handler(set, ref, pid->error, pid->filter_coeff);
     if (pid->mode == PID_POSITION)
     {
         pid->Pout = pid->Kp * pid->error[0];
+
         pid->Iout += pid->Ki * pid->error[0] * dt;
         // pid->Iout = Deadzone(pid->Iout, 0.1f);
+        LimitMax(&pid->Iout, pid->max_iout);
+
         pid->Dbuf[2] = pid->Dbuf[1];
         pid->Dbuf[1] = pid->Dbuf[0];
         pid->Dbuf[0] = (pid->error[0] - pid->error[1]) / dt;
+        // Coefficient 0.75-0.8 is the best for CHASSIS_CONTROL_TIME_MS = 10
+        // for CHASSIS_CONTROL_TIME_MS = 5, don't use filter here
+        pid->Dbuf[0] = first_order_filter(pid->Dbuf[0], pid->Dbuf[1], 0.8f);
         pid->Dout = pid->Kd * pid->Dbuf[0];
-        LimitMax(&pid->Iout, pid->max_iout);
+
         pid->out = pid->Pout + pid->Iout + pid->Dout;
         LimitMax(&pid->out, pid->max_out);
     }
     else if (pid->mode == PID_DELTA)
     {
         pid->Pout = pid->Kp * (pid->error[0] - pid->error[1]);
+
         pid->Iout = pid->Ki * pid->error[0] * dt;
         // pid->Iout = Deadzone(pid->Iout, 0.1f);
+        LimitMax(&pid->Iout, pid->max_iout);
+
         pid->Dbuf[2] = pid->Dbuf[1];
         pid->Dbuf[1] = pid->Dbuf[0];
         pid->Dbuf[0] = (pid->error[0] - 2.0f * pid->error[1] + pid->error[2]) / dt;
         pid->Dout = pid->Kd * pid->Dbuf[0];
+
         pid->out += pid->Pout + pid->Iout + pid->Dout;
         LimitMax(&pid->out, pid->max_out);
     }
@@ -145,7 +156,26 @@ void PID_clear(pid_type_def *pid)
     pid->fdb = pid->set = 0.0f;
 }
 
-fp32 raw_err_handler(fp32 set, fp32 ref)
+fp32 raw_err_handler(fp32 set, fp32 ref, fp32 err[3], fp32 filter_coeff)
 {
   return set - ref;
+}
+
+fp32 rad_err_handler(fp32 set, fp32 ref, fp32 err[3], fp32 filter_coeff)
+{
+  return rad_format(set - ref);
+}
+
+fp32 filter_err_handler(fp32 set, fp32 ref, fp32 err[3], fp32 filter_coeff)
+{
+  fp32 new_err = set - ref;
+  fp32 output = first_order_filter(new_err, err[1], filter_coeff);
+  return output;
+}
+
+fp32 filter_rad_err_handler(fp32 set, fp32 ref, fp32 err[3], fp32 filter_coeff)
+{
+  fp32 new_err = rad_format(set - ref);
+  fp32 output = first_order_filter(new_err, err[1], filter_coeff);
+  return output;
 }

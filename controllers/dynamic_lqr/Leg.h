@@ -18,32 +18,20 @@ typedef struct
 	fp32 now;
 	fp32 last;
 	fp32 set;
-	fp32 set_dot;
+	// fp32 set_dot;
 	fp32 dot;  // derivative
-	fp32 ddot; // second derivative
+	// fp32 ddot; // second derivative
 } variable_status_t;
 
-// Unit mm
 #if (MODEL_ORIG_RM_CAP == 0)
-static const fp32 legLength1 = 0.180f;
-static const fp32 legLength2 = 0.200f;
-static const fp32 legLength3 = 0.200f;
-static const fp32 legLength4 = 0.180f;
-static const fp32 legLength5 = 0.120f;
+#define LEG_L0_MIN 0.2f
+#define LEG_L0_MAX 0.35f
 #elif ((MODEL_ORIG_RM_CAP == 1) || (MODEL_ORIG_RM_CAP == 2))
-// Unit mm
-static const fp32 legLength1 = 0.150f;
-static const fp32 legLength2 = 0.250f;
-static const fp32 legLength3 = 0.250f;
-static const fp32 legLength4 = 0.150f;
-static const fp32 legLength5 = 0.108f;
+#define LEG_L0_MIN 0.15f
+#define LEG_L0_MAX 0.35f
 #endif
-
-extern const fp32 LegL0_Min;
-extern const fp32 LegL0_Max;
-extern const fp32 LegL0_Mid;
-extern const fp32 LegL0_Min_Threshold;
-extern const fp32 LegL0_Max_Threshold;
+#define LEG_L0_MID ((LEG_L0_MAX + LEG_L0_MIN) / 2.0f)
+#define LEG_L0_RANGE (LEG_L0_MAX - LEG_L0_MIN)
 
 typedef struct
 {
@@ -52,6 +40,7 @@ typedef struct
 	variable_status_t angle0;
 	variable_status_t L0;
 	variable_status_t dis;
+	fp32 dis_offset;
 	// Coordinates (in the coordinate system of the five-bar linkage, with the origin on the bisector of the five-bar linkage)
 	fp32 xa, ya;
 	fp32 xb, yb;
@@ -59,7 +48,6 @@ typedef struct
 	fp32 xd, yd;
 	fp32 xe, ye;
 	// Force and Torque
-	fp32 TL_now, TR_now, TWheel_now; // right side view
 	fp32 TL_set, TR_set, TWheel_set;
 	fp32 F_set;  // get through PD control based on leg length, with the initial value being the gravity of the upper structure
 	fp32 Tp_set; // according to the state feedback matrix

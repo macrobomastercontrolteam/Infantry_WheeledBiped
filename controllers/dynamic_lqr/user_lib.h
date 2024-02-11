@@ -35,8 +35,8 @@ typedef const uint8_t uc8;   /*!< Read Only */
 #define MOVING_AVERAGE_RESET 1
 #define MOVING_AVERAGE_CALC 0
 
-#define DISABLE_DRIVE_MOTOR_POWER 1
-#define DISABLE_STEER_MOTOR_POWER 1
+#define DISABLE_DRIVE_MOTOR_POWER 0
+#define DISABLE_STEER_MOTOR_POWER 0
 #define DISABLE_YAW_MOTOR_POWER 1
 #define DISABLE_PITCH_MOTOR_POWER 1
 #define DISABLE_SHOOT_MOTOR_POWER 1
@@ -64,18 +64,6 @@ typedef const uint8_t uc8;   /*!< Read Only */
         }                                                  \
     }
 
-#define brakeband_limit(input, output, deadline)                                                                                \
-    {                                                                                                                           \
-        if ((input) > (deadline) || (input) < -(deadline))                                                                      \
-        {                                                                                                                       \
-            (output) = (input);                                                                                                 \
-        }                                                                                                                       \
-        else                                                                                                                    \
-        {                                                                                                                       \
-            (output) = ((input) * (input) * (input) * (input) * (input)) / ((deadline) * (deadline) * (deadline) * (deadline)); \
-        }                                                                                                                       \
-    }
-
 #define MULTIPLY_MATRIX_WRAPPER(m1, m2, result, fvalid)                                  \
 	do                                                                                   \
 	{                                                                                    \
@@ -100,9 +88,8 @@ typedef const uint8_t uc8;   /*!< Read Only */
 #define BELONG(x, min, max) ((x) >= (MIN(min, max)) && (x) <= (MAX(min, max)) ? 1 : 0) // if x in [min, max] return 1
 #define MAX(x, y) (((x) >= (y)) ? (x) : (y))                                                  // 两个数的最大值
 #define MIN(x, y) (((x) >= (y)) ? (y) : (x))                                                  // 两个数的最小值
-#define rad2deg(X) ((X) / PI * 180.0)                                                         // 角度转换                                                   // 角度转换
-#define deg2rad(X) ((X) / 180.0 * PI)
-#define Limit(x, max, min) ((x) > (MAX(min, max)) ? (MAX(min, max)) : ((x) < (MIN(min, max)) ? (MIN(min, max)) : (x)))
+#define rad2deg(X) ((X) / PI * 180.0f)                                                         // 角度转换                                                   // 角度转换
+#define deg2rad(X) ((X) / 180.0f * PI)
 
 /* 两点间距离 */
 #define CountDistance(x_from, y_from, x_to, y_to) \
@@ -114,21 +101,20 @@ typedef const uint8_t uc8;   /*!< Read Only */
 //弧度格式化为-PI~PI
 #define rad_format(Ang) loop_fp32_constrain((Ang), -PI, PI)
 
+#define CHASSIS_CONTROL_TIME_MS 10.0f
+#define CHASSIS_CONTROL_TIME_S (CHASSIS_CONTROL_TIME_MS / 1000.0f)
+
 // Hardware Properties
 #define MOTOR_TORQUE_CLEARANCE 0.2f
 #define HIP_TORQUE_BURST_MAX (20.0f - MOTOR_TORQUE_CLEARANCE)
 #define HIP_TORQUE_MAX 8.0f
-#define DRIVE_TORQUE_MAX (5.0f - MOTOR_TORQUE_CLEARANCE)
-#define UNLOADED_ROBOT_MASS 10.0f                                          // unit is kg
+#define DRIVE_TORQUE_MAX 3.0f
+#define UNLOADED_ROBOT_MASS 5.0f                                          // unit is kg
+#define UNLOADED_ROBOT_WEIGHT (UNLOADED_ROBOT_MASS * G_gravity) // unit is N
 #define UNLOADED_ROBOT_HALF_WEIGHT (UNLOADED_ROBOT_MASS / 2.0f * G_gravity) // unit is N
 
-typedef struct
-{
-    fp32 input;        //输入数据
-    fp32 out;          //滤波输出的数据
-    fp32 num[1];       //滤波参数
-    fp32 frame_period; //滤波的时间间隔 单位 s
-} first_order_filter_type_t;
+// The least standing requirement
+// #define HIP_TORQUE_MAX 3.5f
 
 typedef struct
 {
@@ -138,7 +124,13 @@ typedef struct
     fp32 sum;
 } moving_average_type_t;
 
-extern uint8_t matrixMultiplication(const uint8_t m1_rows, const uint8_t m1_cols, const uint8_t m2_rows, const uint8_t m2_cols, const fp32 m1[m1_rows][m1_cols], const fp32 m2[m2_rows][m2_cols], fp32 result[m1_rows][m2_cols]);
-extern fp32 moving_average_calc(fp32 input, moving_average_type_t* moving_average_type, uint8_t fInit);
+uint8_t matrixMultiplication(const uint8_t m1_rows, const uint8_t m1_cols, const uint8_t m2_rows, const uint8_t m2_cols, const fp32 m1[m1_rows][m1_cols], const fp32 m2[m2_rows][m2_cols], fp32 result[m1_rows][m2_cols]);
+fp32 moving_average_calc(fp32 input, moving_average_type_t* moving_average_type, uint8_t fInit);
+fp32 fp32_constrain(fp32 Value, fp32 minValue, fp32 maxValue);
+fp32 loop_fp32_constrain(fp32 Input, fp32 minValue, fp32 maxValue);
+fp32 first_order_filter(fp32 input, fp32 prev_output, fp32 coeff);
+fp32 second_order_filter(fp32 input, fp32 output_prev1, fp32 output_prev2, fp32 coeff1, fp32 coeff2);
+fp32 brakezone(fp32 input, fp32 threshold, fp32 order);
+fp32 brakezone_symmetric(fp32 input, fp32 threshold, fp32 order);
 
 #endif /* USER_LIB_H */

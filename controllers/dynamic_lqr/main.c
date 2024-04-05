@@ -15,13 +15,16 @@
 #include <webots/keyboard.h>
 #include <webots/motor.h>
 #include <webots/position_sensor.h>
+#include <webots/distance_sensor.h>
+#include <stdio.h>
 
 #include "Leg.h"
 #include "biped.h"
 #include "pid.h"
 #include "user_lib.h"
 #include <math.h>
-#include <stdio.h>
+
+
 
 const int time_step_ms = CHASSIS_CONTROL_TIME_MS; // millisecond
 fp32 time_s;                                      // second
@@ -48,6 +51,12 @@ void MyRobot_run(void);
 int main(int argc, char **argv)
 {
 	wb_robot_init();
+	// Initialize distance sensors
+	WbDeviceTag ds_left = wb_robot_get_device("ds_left");
+	WbDeviceTag ds_right = wb_robot_get_device("ds_right");
+	
+	wb_distance_sensor_enable(ds_left, time_step_ms);
+	wb_distance_sensor_enable(ds_right, time_step_ms);
 
 	FILE *fptr = fopen("data2.dat", "w");
 	if (fptr == NULL)
@@ -63,7 +72,12 @@ int main(int argc, char **argv)
 	{
 		time_s = wb_robot_get_time();
 		biped.time_ms = time_s * 1000.0f;
-		MyRobot_run();
+		
+		double ds_left_value = wb_distance_sensor_get_value(ds_left);
+		double ds_right_value = wb_distance_sensor_get_value(ds_right);
+		printf ("Distance sensor values left:%f, right: %f\n", ds_left_value, ds_right_value);
+	
+        MyRobot_run();
 		if (time_s > 0.75)
 		{
 			// temperory debug

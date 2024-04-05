@@ -4,8 +4,8 @@ WorldInfo {
   coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation -0.6834357703483276 -0.7282765072315568 0.05028793914043516 0.20047104433546958
-  position -0.24093963401988394 1.767546454900533 8.1248288366455
+  orientation 0.13333863047035438 -0.9834364283750845 0.12277459415183357 1.6530605321429133
+  position -1.8131085184235853 0.1747087625178224 0.9048395114496798
   follow "solid"
 }
 TexturedBackground {
@@ -74,7 +74,7 @@ Robot {
           ]
           endPoint DEF 大腿 Solid {
             translation -0.0003461189974620148 -0.0004892637334860115 -1.3167301224831202e-05
-            rotation 0.7343092250993211 -0.617508760306654 0.2819093699730007 0.0003519000068105165
+            rotation 0.734309225099321 -0.6175087603066539 0.28190936997300065 0.0003519000068105165
             children [
               DEF 小腿铰接 Transform {
                 translation -0.075 -0.1299 0.012
@@ -117,7 +117,7 @@ Robot {
                               ]
                               endPoint DEF 车轮 Solid {
                                 translation -0.0025262911430231918 -2.9539454877436324e-06 -1.0846291409957374e-05
-                                rotation 0.02787671766030037 0.9755172451507994 0.21814901564271003 5.280984981855572e-07
+                                rotation 0.027876717660300365 0.9755172451507993 0.21814901564271 5.280984981855572e-07
                                 children [
                                   GPS {
                                     translation 0 0.05 0
@@ -596,6 +596,16 @@ Robot {
     }
     DEF Body Solid {
       children [
+        DistanceSensor {
+          translation 0 0 -0.14
+          rotation 0 0 1 -1.57
+          name "ds_left"
+        }
+        DistanceSensor {
+          translation 0 0 0.14
+          rotation 0 0 1 -1.57
+          name "ds_right"
+        }
         DEF body Shape {
           appearance PBRAppearance {
             baseColor 1 0 0

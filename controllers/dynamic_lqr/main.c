@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 			fp32 SupportF_L_temp = SupportF_L[0][0];
 			fp32 SupportF_R_temp = SupportF_R[0][0];
 
-			fprintf(fptr, "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f %f %f %f %f %f\n",
+			fprintf(fptr, "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %d %f %f %f %f %f %f %f %f %f %f %f %f %f\n",
 			        time_s,
 			        biped.leg_L.TWheel_set,
 			        biped.leg_R.TWheel_set,
@@ -111,7 +111,9 @@ int main(int argc, char **argv)
 			        biped.leg_R.dis.now,
 			        biped.leg_L.Tp_set,
 			        biped.leg_R.Tp_set,
-			        biped.leg_simplified.dis.set);
+			        biped.leg_simplified.dis.set,
+					biped.motor_measure[CHASSIS_ID_DRIVE_LEFT].torque,
+					biped.motor_measure[CHASSIS_ID_DRIVE_RIGHT].torque);
 		}
 	}
 
@@ -204,6 +206,8 @@ void command_motor(void)
 	wb_motor_set_torque(FL_legmotor, biped.leg_L.TR_set);
 	wb_motor_set_torque(BR_legmotor, biped.leg_R.TL_set);
 	wb_motor_set_torque(FR_legmotor, biped.leg_R.TR_set);
+
+	// Horizontal position
 	// wb_motor_set_position(BL_legmotor, -PI / 3);
 	// wb_motor_set_position(FL_legmotor, -PI / 3);
 	// wb_motor_set_position(BR_legmotor, -PI / 3);

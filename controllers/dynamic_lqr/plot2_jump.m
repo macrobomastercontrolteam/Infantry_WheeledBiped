@@ -48,6 +48,9 @@ Tp_set_R = data(:,36);
 
 WheelDisSet_sim = data(:,37);
 
+TorqueDriveL_now = data(:,38);
+TorqueDriveR_now = data(:,39);
+
 figure;
 
 subplot(3,3,1);
@@ -67,7 +70,7 @@ grid on;
 
 subplot(3,3,3);
 stairs([t,t,t,t], [TorqueLL_now, TorqueRL_now, TorqueLR_now, TorqueRR_now]);
-legend("Joint LL" ,"Joint RL", "Joint LR" ,"Joint RR",'Location','southwest');
+legend("LL Torque Feedback" ,"RL Torque Feedback", "LR Torque Feedback" ,"RR Torque Feedback",'Location','northeast');
 xlabel("t(s)");
 ylabel("Torque(Nm)");
 grid on;

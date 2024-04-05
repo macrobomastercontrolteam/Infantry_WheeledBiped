@@ -319,10 +319,10 @@ void MyRobot_run(void)
 				break;
 			}
 			case WB_KEYBOARD_UP:
-				biped.leg_simplified.dis.set += 0.02f;
+				biped.leg_simplified.dis.set += 0.05f;
 				break;
 			case WB_KEYBOARD_DOWN:
-				biped.leg_simplified.dis.set -= 0.02f;
+				biped.leg_simplified.dis.set -= 0.05f;
 				break;
 			case WB_KEYBOARD_RIGHT:
 				if (ABS(biped.leg_simplified.dis.dot) > 0.1)
@@ -341,12 +341,12 @@ void MyRobot_run(void)
 				biped.yaw.set = 0;
 				break;
 			case 'W':
-				biped.leg_L.L0.set += 0.0002f;
-				biped.leg_R.L0.set += 0.0002f;
+				biped.leg_L.L0.set += 0.001f;
+				biped.leg_R.L0.set += 0.001f;
 				break;
 			case 'S':
-				biped.leg_L.L0.set -= 0.0002f;
-				biped.leg_R.L0.set -= 0.0002f;
+				biped.leg_L.L0.set -= 0.001f;
+				biped.leg_R.L0.set -= 0.001f;
 				break;
 			case 'A':
 				biped.roll.set -= 0.002f;

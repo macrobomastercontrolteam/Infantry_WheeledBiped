@@ -101,7 +101,7 @@ typedef const uint8_t uc8;   /*!< Read Only */
 //弧度格式化为-PI~PI
 #define rad_format(Ang) loop_fp32_constrain((Ang), -PI, PI)
 
-#define CHASSIS_CONTROL_TIME_MS 10.0f
+#define CHASSIS_CONTROL_TIME_MS 5.0f
 #define CHASSIS_CONTROL_TIME_S (CHASSIS_CONTROL_TIME_MS / 1000.0f)
 
 // Hardware Properties

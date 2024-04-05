@@ -108,7 +108,7 @@ fp32 PID_calc(pid_type_def *pid, fp32 ref, fp32 set, fp32 dt)
         pid->Dbuf[0] = (pid->error[0] - pid->error[1]) / dt;
         // Coefficient 0.75-0.8 is the best for CHASSIS_CONTROL_TIME_MS = 10
         // for CHASSIS_CONTROL_TIME_MS = 5, don't use filter here
-        pid->Dbuf[0] = first_order_filter(pid->Dbuf[0], pid->Dbuf[1], 0.8f);
+        // pid->Dbuf[0] = first_order_filter(pid->Dbuf[0], pid->Dbuf[1], 0.8f);
         pid->Dout = pid->Kd * pid->Dbuf[0];
 
         pid->out = pid->Pout + pid->Iout + pid->Dout;

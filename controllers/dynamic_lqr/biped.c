@@ -61,17 +61,17 @@ void biped_init(void)
 
 	// fragile, must keep Ki very small
 	const fp32 split_pid_param[3] = {100, 0, 10}; // for 5ms loop time
-	PID_init(&biped.split_pid, PID_POSITION, split_pid_param, HIP_TORQUE_MAX, HIP_TORQUE_MAX / 2.0f, 0.9f, &filter_err_handler);
+	PID_init(&biped.split_pid, PID_POSITION, split_pid_param, HIP_TORQUE_MAX, HIP_TORQUE_MAX / 2.0f, 0.9f, &rad_err_handler);
 
 	const fp32 roll_pid_param[3] = {1000, 0, 10};
-	PID_init(&biped.roll_pid, PID_POSITION, roll_pid_param, 25, 0, 0.9f, &filter_err_handler);
+	PID_init(&biped.roll_pid, PID_POSITION, roll_pid_param, 25, 0, 0.9f, &rad_err_handler);
 
 	const fp32 invPendulumInAir_pid_param[3] = {200, 10, 10};
-	PID_init(&biped.invPendulumInAir_pid, PID_POSITION, invPendulumInAir_pid_param, HIP_TORQUE_MAX * 2.0f, HIP_TORQUE_MAX * 2.0f, 0.9f, &filter_err_handler);
+	PID_init(&biped.invPendulumInAir_pid, PID_POSITION, invPendulumInAir_pid_param, HIP_TORQUE_MAX * 2.0f, HIP_TORQUE_MAX * 2.0f, 0.9f, &rad_err_handler);
 
 	const fp32 wheelBrakeInAir_pid_param[3] = {7, 1, 0};
-	PID_init(&biped.wheelBrakeInAirL_pid, PID_POSITION, wheelBrakeInAir_pid_param, DRIVE_TORQUE_MAX, DRIVE_TORQUE_MAX, 0.9f, &filter_err_handler);
-	PID_init(&biped.wheelBrakeInAirR_pid, PID_POSITION, wheelBrakeInAir_pid_param, DRIVE_TORQUE_MAX, DRIVE_TORQUE_MAX, 0.9f, &filter_err_handler);
+	PID_init(&biped.wheelBrakeInAirL_pid, PID_POSITION, wheelBrakeInAir_pid_param, DRIVE_TORQUE_MAX, DRIVE_TORQUE_MAX, 0.9f, &rad_err_handler);
+	PID_init(&biped.wheelBrakeInAirR_pid, PID_POSITION, wheelBrakeInAir_pid_param, DRIVE_TORQUE_MAX, DRIVE_TORQUE_MAX, 0.9f, &rad_err_handler);
 
 #if (MODEL_ORIG_RM_CAP == 0)
 	const fp32 K_coeff_init[12][4] = {

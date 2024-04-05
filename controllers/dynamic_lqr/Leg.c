@@ -62,13 +62,13 @@ void LegClass_t_Init(LegClass_t *leg)
 	// avoid saturation here to maintain scale in motor torques
 	// Kd must be big to maintain height!
 	const static fp32 supportF_pid_param[3] = {1000, 20, 500};
-	PID_init(&(leg->supportF_pid), PID_POSITION, supportF_pid_param, 99999, 10, 0.9f, &filter_err_handler);
+	PID_init(&(leg->supportF_pid), PID_POSITION, supportF_pid_param, 99999, 10, 0.9f, &raw_err_handler);
 
 	const fp32 supportFInAir_pid_param[3] = {500, 10, 250};
-	PID_init(&(leg->supportFInAir_pid), PID_POSITION, supportFInAir_pid_param, 99999, 10, 0.9f, &filter_err_handler);
+	PID_init(&(leg->supportFInAir_pid), PID_POSITION, supportFInAir_pid_param, 99999, 10, 0.9f, &raw_err_handler);
 
 // 	const fp32 supportFCharge_pid_param[3] = {1000, 20, 500};
-// 	PID_init(&(leg->supportFCharge_pid), PID_POSITION, supportFCharge_pid_param, 99999, 10, 0.9f, &filter_err_handler);
+// 	PID_init(&(leg->supportFCharge_pid), PID_POSITION, supportFCharge_pid_param, 99999, 10, 0.9f, &raw_err_handler);
 }
 
 void LegClass_t_InvKinematics(LegClass_t *leg, const fp32 xc, const fp32 yc)
